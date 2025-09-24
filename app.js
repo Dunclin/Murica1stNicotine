@@ -57,11 +57,17 @@ document.querySelectorAll('.add').forEach(btn => {
     const qty = parseInt(document.querySelector(`input.qty[data-sku="${sku}"]`).value, 10) || 1;
     addToCart(sku, name, price, flavor, qty);
     drawer.classList.add('open');
+    // Ensure Leaflet resizes if drawer pushed layout
+    setTimeout(() => { if (window._leafletMap) window._leafletMap.invalidateSize(); }, 100);
   });
 });
 
 cartBtn.addEventListener('click', () => drawer.classList.add('open'));
-closeCart.addEventListener('click', () => drawer.classList.remove('open'));
+closeCart.addEventListener('click', () => {
+  drawer.classList.remove('open');
+  setTimeout(() => { if (window._leafletMap) window._leafletMap.invalidateSize(); }, 200);
+});
+
 cartItemsEl.addEventListener('click', (e) => {
   const t = e.target;
   if (!t.classList.contains('qty-btn')) return;
@@ -112,22 +118,26 @@ function initLeafletDelivery(){
   const fallback = { lat: 39.7597, lng: -76.6760 };
 
   lMap = L.map('map').setView([fallback.lat, fallback.lng], 12);
+  window._leafletMap = lMap; // expose for invalidateSize()
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap'
   }).addTo(lMap);
 
-  // Geocode the shop address and drop a marker
+  // Programmatic geocoder (provider) for shop address
+  const provider = L.Control.Geocoder.nominatim();
   const shopAddress = window.SHOP_ADDRESS || '30 South Main St, Railroad, PA 17355';
-  L.Control.geocoder({ defaultMarkGeocode: false }).geocode(shopAddress, (results) => {
+  provider.geocode(shopAddress, (results) => {
     if (results && results.length) {
       const c = results[0].center;
       shopLatLng = { lat: c.lat, lng: c.lng };
       shopMarker = L.marker([c.lat, c.lng], { title: 'Shop' }).bindPopup('Shop').addTo(lMap);
       lMap.setView([c.lat, c.lng], 13);
+      setTimeout(() => lMap.invalidateSize(), 50);
     } else {
-      // fallback to default coords if geocode fails
+      // fallback if geocode fails
       shopLatLng = fallback;
       shopMarker = L.marker([fallback.lat, fallback.lng]).bindPopup('Shop').addTo(lMap);
+      setTimeout(() => lMap.invalidateSize(), 50);
     }
   });
 
@@ -152,6 +162,9 @@ function initLeafletDelivery(){
     drawRouteAndUpdate();
     quoteStatus.textContent = 'Click "Get delivery quote" to compute fees.';
   });
+
+  // Final safety resize once page is fully ready
+  window.addEventListener('load', () => setTimeout(() => lMap.invalidateSize(), 100));
 }
 
 /** Draw route via OSRM demo and update visible route miles */
@@ -171,6 +184,7 @@ function drawRouteAndUpdate(){
     const meters = e.routes[0].summary.totalDistance;
     const miles = meters / 1609.344;
     routeMiEl.textContent = miles.toFixed(2);
+    setTimeout(() => lMap.invalidateSize(), 50);
   })
   .addTo(lMap);
 }
