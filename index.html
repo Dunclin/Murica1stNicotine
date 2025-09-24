@@ -4,7 +4,14 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Murica1stNicotine — ZYN + Disposables (Delivery)</title>
+
+  <!-- Your styles -->
   <link rel="stylesheet" href="styles.css"/>
+
+  <!-- Leaflet + Routing + Geocoder (FREE, no API keys) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css">
 </head>
 <body>
   <!-- Age Gate Modal -->
@@ -16,7 +23,7 @@
         <button id="age-yes" class="btn">Yes, I am 21+</button>
         <button id="age-no" class="btn btn-secondary">No</button>
       </div>
-      <p class="fineprint">We use third-party verification at checkout. ID may be required.</p>
+      <p class="fineprint">We use third-party verification at delivery. ID may be required.</p>
     </div>
   </div>
 
@@ -184,44 +191,33 @@
       </div>
     </section>
 
-    <!-- Delivery + Google Maps -->
+    <!-- Delivery + Leaflet map -->
     <section id="delivery" class="section">
       <h2 class="section-title">Delivery Details</h2>
       <div class="card">
-        <label>Delivery address (autocomplete)
+        <label>Delivery address (type or search on the map)
           <input type="text" id="addr" placeholder="Start typing: 123 Main St, City, State"/>
         </label>
 
+        <!-- Leaflet map -->
         <div id="map" class="map" aria-label="Delivery map"></div>
 
         <div class="row" style="margin-top:.75rem">
           <button class="btn" id="quote">Get delivery quote</button>
-          <div class="muted" id="quote-status">Enter address to calculate fees.</div>
+          <div class="muted" id="quote-status">Use the search on the map or enter a full address.</div>
         </div>
 
         <div class="grid" style="margin-top:.75rem">
-          <div class="card">
-            <strong>Distance (route)</strong><br>
-            <span id="route-mi">—</span> mi
-          </div>
-          <div class="card">
-            <strong>Delivery fee</strong><br>
-            $<span id="fee-delivery">0.00</span>
-          </div>
-          <div class="card">
-            <strong>Gas fee</strong><br>
-            $<span id="fee-gas">0.00</span>
-          </div>
-          <div class="card">
-            <strong>Cart + fees total</strong><br>
-            $<span id="grand-total">0.00</span>
-          </div>
+          <div class="card"><strong>Distance (route)</strong><br><span id="route-mi">—</span> mi</div>
+          <div class="card"><strong>Delivery fee</strong><br>$<span id="fee-delivery">0.00</span></div>
+          <div class="card"><strong>Gas fee</strong><br>$<span id="fee-gas">0.00</span></div>
+          <div class="card"><strong>Cart + fees total</strong><br>$<span id="grand-total">0.00</span></div>
         </div>
       </div>
     </section>
 
     <section id="info" class="notice">
-      <strong>⚠️ Legal & Safety:</strong> Nicotine is an addictive chemical. 21+ only. Comply with federal/state/local laws and age verification. Orders are paid **at delivery**.
+      <strong>⚠️ Legal & Safety:</strong> Nicotine is an addictive chemical. 21+ only. Comply with federal/state/local laws and age verification. Orders are paid <strong>at delivery</strong>.
     </section>
   </main>
 
@@ -240,13 +236,16 @@
 
   <!-- Config -->
   <script>
-    window.API_BASE = "http://localhost:8080"; // <-- change to your deployed server URL
+    window.API_BASE = "http://localhost:8080";  /* change to your deployed server URL */
     window.SHOP_ADDRESS = "30 South Main St, Railroad, PA 17355";
   </script>
 
-  <!-- App code (defines window.initMap) -->
+  <!-- Leaflet libs -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+  <!-- App logic -->
   <script src="app.js"></script>
-  <!-- Google Maps JS API: replace YOUR_GOOGLE_MAPS_API_KEY -->
-  <script async src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places&callback=initMap"></script>
 </body>
 </html>
