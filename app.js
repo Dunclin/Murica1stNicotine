@@ -1,4 +1,4 @@
-// ---------- Cart + UI ----------
+/* ---------------- Cart + Age Gate ---------------- */
 const CART_KEY = 'zyn_cart_v1';
 const cartBtn = document.getElementById('cart-btn');
 const drawer = document.getElementById('cart-drawer');
@@ -8,7 +8,6 @@ const cartTotalEl = document.getElementById('cart-total');
 const cartCountEl = document.getElementById('cart-count');
 const checkoutBtn = document.getElementById('checkout');
 
-// Age gate
 const ageGate = document.getElementById('age-gate');
 const ageYes = document.getElementById('age-yes');
 const ageNo = document.getElementById('age-no');
@@ -74,23 +73,17 @@ cartItemsEl.addEventListener('click', (e) => {
   saveCart(cart);
 });
 
-// Age gate
 function maybeShowAgeGate(){
   if (sessionStorage.getItem('age_ok') === '1') return;
   ageGate.classList.remove('hidden');
 }
-ageYes.addEventListener('click', () => {
-  sessionStorage.setItem('age_ok','1');
-  ageGate.classList.add('hidden');
-});
-ageNo.addEventListener('click', () => {
-  window.location.href = 'https://www.fda.gov/tobacco-products';
-});
+ageYes.addEventListener('click', () => { sessionStorage.setItem('age_ok','1'); ageGate.classList.add('hidden'); });
+ageNo.addEventListener('click', () => { window.location.href = 'https://www.fda.gov/tobacco-products'; });
 
 renderCart();
 maybeShowAgeGate();
 
-// ---------- Delivery & Maps ----------
+/* ---------------- Delivery + Leaflet Routing ---------------- */
 const addrInput = document.getElementById('addr');
 const quoteBtn = document.getElementById('quote');
 const quoteStatus = document.getElementById('quote-status');
@@ -99,8 +92,7 @@ const feeGasEl = document.getElementById('fee-gas');
 const grandTotalEl = document.getElementById('grand-total');
 const routeMiEl = document.getElementById('route-mi');
 
-let map, geocoder, directionsService, directionsRenderer;
-let shopMarker, userMarker;
+let lMap, lRouter, shopMarker, destMarker;
 let shopLatLng = null;
 let destLatLng = null;
 let lastQuote = null;
@@ -114,85 +106,81 @@ function updateGrandTotal(){
   grandTotalEl.textContent = (cartTotal + fees).toFixed(2);
 }
 
-// Called by Google Maps JS API (callback=initMap in index.html)
-window.initMap = function(){
-  geocoder = new google.maps.Geocoder();
-  directionsService = new google.maps.DirectionsService();
-  directionsRenderer = new google.maps.DirectionsRenderer({ suppressMarkers: true });
+/** Initialize Leaflet + geocoder + shop pin */
+function initLeafletDelivery(){
+  // Default center around Railroad, PA in case geocode is slow
+  const fallback = { lat: 39.7597, lng: -76.6760 };
 
-  map = new google.maps.Map(document.getElementById('map'), {
-    center: { lat: 39.7597, lng: -76.6760 }, // fallback to Railroad, PA
-    zoom: 12,
-    mapTypeControl: false,
-    streetViewControl: false
-  });
-  directionsRenderer.setMap(map);
+  lMap = L.map('map').setView([fallback.lat, fallback.lng], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(lMap);
 
-  // Geocode shop address and pin it
+  // Geocode the shop address and drop a marker
   const shopAddress = window.SHOP_ADDRESS || '30 South Main St, Railroad, PA 17355';
-  geocoder.geocode({ address: shopAddress }, (results, status) => {
-    if (status === 'OK' && results[0]) {
-      const loc = results[0].geometry.location;
-      shopLatLng = { lat: loc.lat(), lng: loc.lng() };
-      shopMarker = new google.maps.Marker({
-        position: shopLatLng,
-        map,
-        label: 'S',
-        title: 'Shop'
-      });
-      map.setCenter(shopLatLng);
+  L.Control.geocoder({ defaultMarkGeocode: false }).geocode(shopAddress, (results) => {
+    if (results && results.length) {
+      const c = results[0].center;
+      shopLatLng = { lat: c.lat, lng: c.lng };
+      shopMarker = L.marker([c.lat, c.lng], { title: 'Shop' }).bindPopup('Shop').addTo(lMap);
+      lMap.setView([c.lat, c.lng], 13);
+    } else {
+      // fallback to default coords if geocode fails
+      shopLatLng = fallback;
+      shopMarker = L.marker([fallback.lat, fallback.lng]).bindPopup('Shop').addTo(lMap);
     }
   });
 
-  // Places autocomplete for the destination input
-  const ac = new google.maps.places.Autocomplete(addrInput, {
-    types: ['geocode'],
-    componentRestrictions: { country: 'us' }
-  });
-  ac.addListener('place_changed', () => {
-    const place = ac.getPlace();
-    if (!place.geometry || !place.geometry.location) return;
-    const loc = place.geometry.location;
-    destLatLng = { lat: loc.lat(), lng: loc.lng() };
-
-    // Put a marker for the user
-    if (userMarker) userMarker.setMap(null);
-    userMarker = new google.maps.Marker({
-      position: destLatLng,
-      map,
-      label: 'D',
-      title: 'Delivery'
-    });
-
-    // Draw route & show route distance
-    if (shopLatLng) {
-      directionsService.route({
-        origin: shopLatLng,
-        destination: destLatLng,
-        travelMode: google.maps.TravelMode.DRIVING
-      }, (res, status) => {
-        if (status === 'OK' && res.routes[0] && res.routes[0].legs[0]) {
-          directionsRenderer.setDirections(res);
-          const meters = res.routes[0].legs.reduce((m, leg) => m + (leg.distance?.value || 0), 0);
-          const miles = meters / 1609.344;
-          routeMiEl.textContent = miles.toFixed(2);
-          // Clear stale quote to encourage recalculation
-          lastQuote = null;
-          updateGrandTotal();
-        }
-      });
-    }
-
-    // Focus the quote button hint
+  // Add a geocoder control for the user destination search
+  const geocoderCtrl = L.Control.geocoder({ defaultMarkGeocode: false }).addTo(lMap);
+  geocoderCtrl.on('markgeocode', (e) => {
+    const c = e.geocode.center;
+    destLatLng = { lat: c.lat, lng: c.lng };
+    if (destMarker) destMarker.remove();
+    destMarker = L.marker([c.lat, c.lng], { title: 'Delivery' })
+      .bindPopup(e.geocode.name).addTo(lMap);
+    addrInput.value = e.geocode.name;
+    drawRouteAndUpdate();
     quoteStatus.textContent = 'Click "Get delivery quote" to compute fees.';
   });
-};
 
+  // If user clicks on the map, set destination
+  lMap.on('click', (e) => {
+    destLatLng = { lat: e.latlng.lat, lng: e.latlng.lng };
+    if (destMarker) destMarker.remove();
+    destMarker = L.marker([destLatLng.lat, destLatLng.lng], { title: 'Delivery' }).addTo(lMap);
+    drawRouteAndUpdate();
+    quoteStatus.textContent = 'Click "Get delivery quote" to compute fees.';
+  });
+}
+
+/** Draw route via OSRM demo and update visible route miles */
+function drawRouteAndUpdate(){
+  if (!shopLatLng || !destLatLng) return;
+  if (lRouter) { lMap.removeControl(lRouter); lRouter = null; }
+
+  lRouter = L.Routing.control({
+    waypoints: [
+      L.latLng(shopLatLng.lat, shopLatLng.lng),
+      L.latLng(destLatLng.lat, destLatLng.lng)
+    ],
+    router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }),
+    addWaypoints: false, draggableWaypoints: false, show: false, fitSelectedRoutes: true
+  })
+  .on('routesfound', (e) => {
+    const meters = e.routes[0].summary.totalDistance;
+    const miles = meters / 1609.344;
+    routeMiEl.textContent = miles.toFixed(2);
+  })
+  .addTo(lMap);
+}
+
+document.addEventListener('DOMContentLoaded', initLeafletDelivery);
+
+/* -------- Quote + Order (uses your existing server) -------- */
 async function requestQuote(){
   const address = (addrInput?.value || '').trim();
-  if (!address) return alert('Enter a delivery address first.');
-  if (!destLatLng) quoteStatus.textContent = 'Tip: choose an address from the dropdown for best accuracy.';
-
+  if (!address && !destLatLng) return alert('Enter or pick a delivery address.');
   quoteStatus.textContent = 'Calculating…';
   try {
     const res = await fetch(`${window.API_BASE}/api/quote`, {
@@ -218,17 +206,17 @@ async function requestQuote(){
 }
 if (quoteBtn) quoteBtn.addEventListener('click', requestQuote);
 
-// Recompute grand total when cart changes
+// Update grand total when cart changes
 const _saveCartOrig = saveCart;
 saveCart = function(c){ _saveCartOrig(c); updateGrandTotal(); };
 updateGrandTotal();
 
-// ---------- Place Order (pay on delivery) ----------
+/* -------- Place Order (Pay on Delivery) -------- */
 checkoutBtn.addEventListener('click', async () => {
   const cart = getCart();
   if (!cart.length) return alert('Your cart is empty.');
   const address = (addrInput?.value || '').trim();
-  if (!address) return alert('Enter a delivery address.');
+  if (!address && !destLatLng) return alert('Enter or pick a delivery address.');
 
   try {
     const res = await fetch(`${window.API_BASE}/api/order`, {
@@ -243,7 +231,6 @@ checkoutBtn.addEventListener('click', async () => {
     });
     if (!res.ok) throw new Error('Order failed');
     const data = await res.json();
-    // Clear cart and go to success page with order ID + total
     localStorage.removeItem(CART_KEY);
     window.location.href = `success.html?orderId=${encodeURIComponent(data.orderId)}&total=${encodeURIComponent(data.total.toFixed(2))}`;
   } catch (e) {
