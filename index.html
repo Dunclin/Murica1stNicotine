@@ -1,38 +1,97 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>My GitHub Website</title>
-  <style>
-    body { font-family: system-ui, Arial, sans-serif; margin: 0; line-height: 1.6; }
-    header { padding: 2.5rem 1.25rem; text-align: center; }
-    .wrap { max-width: 860px; margin: 0 auto; padding: 0 1.25rem 3rem; }
-    nav a { margin: 0 .5rem; text-decoration: none; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 1rem; margin: 1rem 0; }
-    footer { padding: 2rem 1.25rem; text-align: center; color: #666; border-top: 1px solid #eee; }
-  </style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>ZYN Shop — 3mg & 6mg</title>
+  <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
-  <header>
-    <h1>👋 Hello, world</h1>
-    <nav>
-      <a href="/">Home</a>
-      <a href="#about">About</a>
-      <a href="#contact">Contact</a>
-    </nav>
+  <!-- Age Gate Modal -->
+  <div id="age-gate" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="age-title">
+    <div class="modal-card">
+      <h2 id="age-title">Are you 21 or older?</h2>
+      <p>You must be 21+ to enter and purchase nicotine products.</p>
+      <div class="row">
+        <button id="age-yes" class="btn">Yes, I am 21+</button>
+        <button id="age-no" class="btn btn-secondary">No</button>
+      </div>
+      <p class="fineprint">We use third-party verification at checkout. ID may be required.</p>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <h1>ZYN Nicotine Pouches</h1>
+    <div class="spacer"></div>
+    <button id="cart-btn" class="btn">Cart (<span id="cart-count">0</span>)</button>
   </header>
+
   <main class="wrap">
-    <section class="card" id="about">
-      <h2>About</h2>
-      <p>This site is hosted on <strong>GitHub Pages</strong>. Edit <code>index.html</code> and push to update instantly.</p>
+    <section class="grid">
+      <article class="card">
+        <h2>ZYN 3mg</h2>
+        <p class="muted">Smooth 3mg pouches</p>
+        <label>Flavor
+          <select data-sku="ZYN-3MG" class="flavor">
+            <option value="mint">Mint</option>
+            <option value="wintergreen">Wintergreen</option>
+            <option value="coffee">Coffee</option>
+          </select>
+        </label>
+        <label>Quantity
+          <input type="number" min="1" value="1" class="qty" data-sku="ZYN-3MG"/>
+        </label>
+        <div class="row">
+          <div>$4.99 / can</div>
+          <button class="btn add" data-sku="ZYN-3MG" data-name="ZYN 3mg" data-price="4.99">Add to cart</button>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>ZYN 6mg</h2>
+        <p class="muted">Bold 6mg pouches</p>
+        <label>Flavor
+          <select data-sku="ZYN-6MG" class="flavor">
+            <option value="cool-mint">Cool Mint</option>
+            <option value="spearmint">Spearmint</option>
+            <option value="citrus">Citrus</option>
+          </select>
+        </label>
+        <label>Quantity
+          <input type="number" min="1" value="1" class="qty" data-sku="ZYN-6MG"/>
+        </label>
+        <div class="row">
+          <div>$4.99 / can</div>
+          <button class="btn add" data-sku="ZYN-6MG" data-name="ZYN 6mg" data-price="4.99">Add to cart</button>
+        </div>
+      </article>
     </section>
-    <section class="card" id="contact">
-      <h2>Contact</h2>
-      <p>Email me at <a href="mailto:you@example.com">you@example.com</a>.</p>
+
+    <section class="notice">
+      <strong>⚠️ Warning:</strong> This product contains nicotine. Nicotine is an addictive chemical. 21+ only.
     </section>
   </main>
-  <footer>© <span id="y"></span> Me</footer>
-  <script>document.getElementById('y').textContent = new Date().getFullYear()</script>
+
+  <!-- Cart Drawer -->
+  <div id="cart-drawer" class="drawer hidden" aria-labelledby="cart-title">
+    <div class="drawer-head">
+      <h3 id="cart-title">Your Cart</h3>
+      <button id="close-cart" class="btn btn-secondary">Close</button>
+    </div>
+    <div id="cart-items"></div>
+    <div class="drawer-foot">
+      <div>Total: $<span id="cart-total">0.00</span></div>
+      <button id="checkout" class="btn">Checkout</button>
+    </div>
+  </div>
+
+  <!-- Age verification embed (replace with your provider's script, e.g., AgeChecker.Net) -->
+  <!-- e.g., <script src="https://static.agechecker.net/v1/agechecker.js" data-api-key="YOUR_KEY"></script> -->
+
+  <script>
+    // Config: set your backend URL that creates the Authorize.Net hosted payment token
+    window.API_BASE = "http://localhost:8080"; // change to your deployed server URL
+  </script>
+  <script src="app.js"></script>
 </body>
 </html>
