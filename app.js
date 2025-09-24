@@ -78,19 +78,20 @@ checkoutBtn.addEventListener('click', async () => {
   const cart = getCart();
   if (!cart.length) return alert('Your cart is empty.');
 
-  // Calculate server-side in production
+  // Calculate client-side (server will re-calc)
   const total = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+  const address = (document.getElementById('addr')?.value || '').trim();
 
   try {
     const res = await fetch(`${window.API_BASE}/api/create-checkout`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cart, total })
+      body: JSON.stringify({ cart, total, address })
     });
     if (!res.ok) throw new Error('Checkout failed');
     const data = await res.json();
     if (data.payUrl) {
-      window.location.href = data.payUrl; // server returns /pay/<token> route which auto-submits to Authorize.Net
+      window.location.href = data.payUrl; // redirect to hosted payment
     } else {
       alert('Payment link not created. Check server logs.');
     }
@@ -115,3 +116,59 @@ ageNo.addEventListener('click', () => {
 
 renderCart();
 maybeShowAgeGate();
+
+/* ===== Delivery quote logic ===== */
+const addrInput = document.getElementById('addr');
+const quoteBtn = document.getElementById('quote');
+const distKmEl = document.getElementById('dist-km');
+const distMiEl = document.getElementById('dist-mi');
+const feeDeliveryEl = document.getElementById('fee-delivery');
+const feeGasEl = document.getElementById('fee-gas');
+const grandTotalEl = document.getElementById('grand-total');
+const quoteStatus = document.getElementById('quote-status');
+
+let lastQuote = null;
+
+function getCartTotal(){
+  return getCart().reduce((sum, i) => sum + i.price * i.qty, 0);
+}
+function updateGrandTotal(){
+  const cartTotal = getCartTotal();
+  const fees = (lastQuote?.fees?.delivery || 0) + (lastQuote?.fees?.gas || 0);
+  grandTotalEl.textContent = (cartTotal + fees).toFixed(2);
+}
+
+async function requestQuote(){
+  const address = (addrInput?.value || '').trim();
+  if (!address) {
+    alert('Enter a delivery address first.');
+    return;
+  }
+  quoteStatus.textContent = 'Calculating…';
+  try {
+    const res = await fetch(`${window.API_BASE}/api/quote`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address })
+    });
+    if (!res.ok) throw new Error('Quote failed');
+    const data = await res.json();
+    lastQuote = data;
+    distKmEl.textContent = data.distance_km.toFixed(2);
+    distMiEl.textContent = (data.distance_km * 0.621371).toFixed(2);
+    feeDeliveryEl.textContent = data.fees.delivery.toFixed(2);
+    feeGasEl.textContent = data.fees.gas.toFixed(2);
+    updateGrandTotal();
+    quoteStatus.textContent = 'Quote updated.';
+  } catch (e) {
+    console.error(e);
+    quoteStatus.textContent = 'Could not calculate. Try a full address and ZIP.';
+  }
+}
+
+if (quoteBtn) quoteBtn.addEventListener('click', requestQuote);
+
+// Recompute grand total when cart changes
+const _saveCartOrig = saveCart;
+saveCart = function(c){ _saveCartOrig(c); updateGrandTotal(); };
+updateGrandTotal();
