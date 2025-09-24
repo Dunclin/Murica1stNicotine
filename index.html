@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Murica1stNicotine — ZYN + Disposables</title>
+  <title>Murica1stNicotine — ZYN + Disposables (Delivery)</title>
   <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
@@ -31,6 +31,7 @@
     <nav class="site-nav">
       <a href="#zyn">ZYN</a>
       <a href="#disposables">Disposables</a>
+      <a href="#delivery">Delivery</a>
       <a href="#info">Info</a>
     </nav>
     <button id="cart-btn" class="btn cart-cta">Cart (<span id="cart-count">0</span>)</button>
@@ -40,10 +41,10 @@
     <!-- HERO -->
     <section class="hero">
       <h1>Quality. Compliant. Fast.</h1>
-      <p class="muted">Secure card payments via hosted checkout. Age verification required.</p>
+      <p class="muted">Pay on delivery. Age verification required.</p>
     </section>
 
-    <!-- ZYN Section -->
+    <!-- ZYN -->
     <section id="zyn" class="section">
       <h2 class="section-title">ZYN Nicotine Pouches</h2>
       <div class="grid">
@@ -89,11 +90,10 @@
       </div>
     </section>
 
-    <!-- Disposables Section -->
+    <!-- Disposables -->
     <section id="disposables" class="section">
       <h2 class="section-title">Disposable Vapes</h2>
       <div class="grid">
-        <!-- 5k -->
         <article class="card">
           <div class="badge">5,000 puffs</div>
           <h3>Murica 5K Disposable</h3>
@@ -116,7 +116,6 @@
           </div>
         </article>
 
-        <!-- 10k -->
         <article class="card">
           <div class="badge">10,000 puffs</div>
           <h3>Murica 10K Disposable</h3>
@@ -139,7 +138,6 @@
           </div>
         </article>
 
-        <!-- 20k -->
         <article class="card">
           <div class="badge">20,000 puffs</div>
           <h3>Murica 20K Disposable</h3>
@@ -162,7 +160,6 @@
           </div>
         </article>
 
-        <!-- 25k -->
         <article class="card">
           <div class="badge">25,000 puffs</div>
           <h3>Murica 25K Disposable</h3>
@@ -187,21 +184,25 @@
       </div>
     </section>
 
-    <!-- Delivery Section -->
+    <!-- Delivery + Google Maps -->
     <section id="delivery" class="section">
       <h2 class="section-title">Delivery Details</h2>
       <div class="card">
-        <label>Delivery address (street, city, state, ZIP)
-          <input type="text" id="addr" placeholder="123 Main St, York, PA 17403"/>
+        <label>Delivery address (autocomplete)
+          <input type="text" id="addr" placeholder="Start typing: 123 Main St, City, State"/>
         </label>
-        <div class="row">
+
+        <div id="map" class="map" aria-label="Delivery map"></div>
+
+        <div class="row" style="margin-top:.75rem">
           <button class="btn" id="quote">Get delivery quote</button>
           <div class="muted" id="quote-status">Enter address to calculate fees.</div>
         </div>
+
         <div class="grid" style="margin-top:.75rem">
           <div class="card">
-            <strong>Distance</strong><br>
-            <span id="dist-km">—</span> km (<span id="dist-mi">—</span> mi)
+            <strong>Distance (route)</strong><br>
+            <span id="route-mi">—</span> mi
           </div>
           <div class="card">
             <strong>Delivery fee</strong><br>
@@ -220,7 +221,7 @@
     </section>
 
     <section id="info" class="notice">
-      <strong>⚠️ Legal & Safety:</strong> Nicotine is an addictive chemical. 21+ only. Comply with federal/state/local laws, shipping restrictions, and age verification. Card data handled via secure hosted payment form.
+      <strong>⚠️ Legal & Safety:</strong> Nicotine is an addictive chemical. 21+ only. Comply with federal/state/local laws and age verification. Orders are paid **at delivery**.
     </section>
   </main>
 
@@ -233,17 +234,19 @@
     <div id="cart-items"></div>
     <div class="drawer-foot">
       <div>Total: $<span id="cart-total">0.00</span></div>
-      <button id="checkout" class="btn primary">Checkout</button>
+      <button id="checkout" class="btn primary">Place Order (Pay on delivery)</button>
     </div>
   </div>
 
-  <!-- Age verification embed (replace with your provider's script, e.g., AgeChecker.Net) -->
-  <!-- e.g., <script src="https://static.agechecker.net/v1/agechecker.js" data-api-key="YOUR_KEY"></script> -->
-
+  <!-- Config -->
   <script>
-    // Config: set your backend URL that creates the Authorize.Net hosted payment token
-    window.API_BASE = "http://localhost:8080"; // change to your deployed server URL
+    window.API_BASE = "http://localhost:8080"; // <-- change to your deployed server URL
+    window.SHOP_ADDRESS = "30 South Main St, Railroad, PA 17355";
   </script>
+
+  <!-- App code (defines window.initMap) -->
   <script src="app.js"></script>
+  <!-- Google Maps JS API: replace YOUR_GOOGLE_MAPS_API_KEY -->
+  <script async src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places&callback=initMap"></script>
 </body>
 </html>
