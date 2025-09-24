@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>ZYN Shop — 3mg & 6mg</title>
+  <title>Murica1stNicotine — ZYN + Disposables</title>
   <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
@@ -20,55 +20,175 @@
     </div>
   </div>
 
-  <header class="site-header">
-    <h1>ZYN Nicotine Pouches</h1>
-    <div class="spacer"></div>
-    <button id="cart-btn" class="btn">Cart (<span id="cart-count">0</span>)</button>
+  <header class="site-header brand">
+    <div class="brand-mark">
+      <span class="flag">🇺🇸</span>
+      <div class="brand-text">
+        <strong>Murica1stNicotine</strong>
+        <small>Premium Nicotine — 21+ Only</small>
+      </div>
+    </div>
+    <nav class="site-nav">
+      <a href="#zyn">ZYN</a>
+      <a href="#disposables">Disposables</a>
+      <a href="#info">Info</a>
+    </nav>
+    <button id="cart-btn" class="btn cart-cta">Cart (<span id="cart-count">0</span>)</button>
   </header>
 
   <main class="wrap">
-    <section class="grid">
-      <article class="card">
-        <h2>ZYN 3mg</h2>
-        <p class="muted">Smooth 3mg pouches</p>
-        <label>Flavor
-          <select data-sku="ZYN-3MG" class="flavor">
-            <option value="mint">Mint</option>
-            <option value="wintergreen">Wintergreen</option>
-            <option value="coffee">Coffee</option>
-          </select>
-        </label>
-        <label>Quantity
-          <input type="number" min="1" value="1" class="qty" data-sku="ZYN-3MG"/>
-        </label>
-        <div class="row">
-          <div>$4.99 / can</div>
-          <button class="btn add" data-sku="ZYN-3MG" data-name="ZYN 3mg" data-price="4.99">Add to cart</button>
-        </div>
-      </article>
-
-      <article class="card">
-        <h2>ZYN 6mg</h2>
-        <p class="muted">Bold 6mg pouches</p>
-        <label>Flavor
-          <select data-sku="ZYN-6MG" class="flavor">
-            <option value="cool-mint">Cool Mint</option>
-            <option value="spearmint">Spearmint</option>
-            <option value="citrus">Citrus</option>
-          </select>
-        </label>
-        <label>Quantity
-          <input type="number" min="1" value="1" class="qty" data-sku="ZYN-6MG"/>
-        </label>
-        <div class="row">
-          <div>$4.99 / can</div>
-          <button class="btn add" data-sku="ZYN-6MG" data-name="ZYN 6mg" data-price="4.99">Add to cart</button>
-        </div>
-      </article>
+    <!-- HERO -->
+    <section class="hero">
+      <h1>Quality. Compliant. Fast.</h1>
+      <p class="muted">Secure card payments via hosted checkout. Age verification required.</p>
     </section>
 
-    <section class="notice">
-      <strong>⚠️ Warning:</strong> This product contains nicotine. Nicotine is an addictive chemical. 21+ only.
+    <!-- ZYN Section -->
+    <section id="zyn" class="section">
+      <h2 class="section-title">ZYN Nicotine Pouches</h2>
+      <div class="grid">
+        <article class="card">
+          <div class="badge">3 mg</div>
+          <h3>ZYN 3mg</h3>
+          <p class="muted">Smooth 3mg pouches</p>
+          <label>Flavor
+            <select data-sku="ZYN-3MG" class="flavor">
+              <option value="mint">Mint</option>
+              <option value="wintergreen">Wintergreen</option>
+              <option value="coffee">Coffee</option>
+            </select>
+          </label>
+          <label>Quantity
+            <input type="number" min="1" value="1" class="qty" data-sku="ZYN-3MG"/>
+          </label>
+          <div class="row">
+            <div class="price">$4.99 / can</div>
+            <button class="btn add" data-sku="ZYN-3MG" data-name="ZYN 3mg" data-price="4.99">Add to cart</button>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="badge">6 mg</div>
+          <h3>ZYN 6mg</h3>
+          <p class="muted">Bold 6mg pouches</p>
+          <label>Flavor
+            <select data-sku="ZYN-6MG" class="flavor">
+              <option value="cool-mint">Cool Mint</option>
+              <option value="spearmint">Spearmint</option>
+              <option value="citrus">Citrus</option>
+            </select>
+          </label>
+          <label>Quantity
+            <input type="number" min="1" value="1" class="qty" data-sku="ZYN-6MG"/>
+          </label>
+          <div class="row">
+            <div class="price">$4.99 / can</div>
+            <button class="btn add" data-sku="ZYN-6MG" data-name="ZYN 6mg" data-price="4.99">Add to cart</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Disposables Section -->
+    <section id="disposables" class="section">
+      <h2 class="section-title">Disposable Vapes</h2>
+      <div class="grid">
+        <!-- 5k -->
+        <article class="card">
+          <div class="badge">5,000 puffs</div>
+          <h3>Murica 5K Disposable</h3>
+          <p class="muted">Compact, rechargeable disposable</p>
+          <label>Flavor
+            <select data-sku="DISP-5K" class="flavor">
+              <option value="blue-razz-ice">Blue Razz Ice</option>
+              <option value="strawberry-watermelon">Strawberry Watermelon</option>
+              <option value="peach-ice">Peach Ice</option>
+              <option value="grape">Grape</option>
+              <option value="menthol">Menthol</option>
+            </select>
+          </label>
+          <label>Quantity
+            <input type="number" min="1" value="1" class="qty" data-sku="DISP-5K"/>
+          </label>
+          <div class="row">
+            <div class="price">$14.99</div>
+            <button class="btn add" data-sku="DISP-5K" data-name="Murica 5K Disposable" data-price="14.99">Add to cart</button>
+          </div>
+        </article>
+
+        <!-- 10k -->
+        <article class="card">
+          <div class="badge">10,000 puffs</div>
+          <h3>Murica 10K Disposable</h3>
+          <p class="muted">High-capacity with mesh coil</p>
+          <label>Flavor
+            <select data-sku="DISP-10K" class="flavor">
+              <option value="blue-razz-ice">Blue Razz Ice</option>
+              <option value="strawberry-watermelon">Strawberry Watermelon</option>
+              <option value="peach-ice">Peach Ice</option>
+              <option value="grape">Grape</option>
+              <option value="menthol">Menthol</option>
+            </select>
+          </label>
+          <label>Quantity
+            <input type="number" min="1" value="1" class="qty" data-sku="DISP-10K"/>
+          </label>
+          <div class="row">
+            <div class="price">$18.99</div>
+            <button class="btn add" data-sku="DISP-10K" data-name="Murica 10K Disposable" data-price="18.99">Add to cart</button>
+          </div>
+        </article>
+
+        <!-- 20k -->
+        <article class="card">
+          <div class="badge">20,000 puffs</div>
+          <h3>Murica 20K Disposable</h3>
+          <p class="muted">Massive battery, USB‑C charging</p>
+          <label>Flavor
+            <select data-sku="DISP-20K" class="flavor">
+              <option value="blue-razz-ice">Blue Razz Ice</option>
+              <option value="strawberry-watermelon">Strawberry Watermelon</option>
+              <option value="peach-ice">Peach Ice</option>
+              <option value="grape">Grape</option>
+              <option value="menthol">Menthol</option>
+            </select>
+          </label>
+          <label>Quantity
+            <input type="number" min="1" value="1" class="qty" data-sku="DISP-20K"/>
+          </label>
+          <div class="row">
+            <div class="price">$24.99</div>
+            <button class="btn add" data-sku="DISP-20K" data-name="Murica 20K Disposable" data-price="24.99">Add to cart</button>
+          </div>
+        </article>
+
+        <!-- 25k -->
+        <article class="card">
+          <div class="badge">25,000 puffs</div>
+          <h3>Murica 25K Disposable</h3>
+          <p class="muted">Long‑haul performance & bold flavor</p>
+          <label>Flavor
+            <select data-sku="DISP-25K" class="flavor">
+              <option value="blue-razz-ice">Blue Razz Ice</option>
+              <option value="strawberry-watermelon">Strawberry Watermelon</option>
+              <option value="peach-ice">Peach Ice</option>
+              <option value="grape">Grape</option>
+              <option value="menthol">Menthol</option>
+            </select>
+          </label>
+          <label>Quantity
+            <input type="number" min="1" value="1" class="qty" data-sku="DISP-25K"/>
+          </label>
+          <div class="row">
+            <div class="price">$29.99</div>
+            <button class="btn add" data-sku="DISP-25K" data-name="Murica 25K Disposable" data-price="29.99">Add to cart</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="info" class="notice">
+      <strong>⚠️ Legal & Safety:</strong> Nicotine is an addictive chemical. 21+ only. Comply with federal/state/local laws, shipping restrictions, and age verification. Card data handled via secure hosted payment form.
     </section>
   </main>
 
@@ -81,7 +201,7 @@
     <div id="cart-items"></div>
     <div class="drawer-foot">
       <div>Total: $<span id="cart-total">0.00</span></div>
-      <button id="checkout" class="btn">Checkout</button>
+      <button id="checkout" class="btn primary">Checkout</button>
     </div>
   </div>
 
