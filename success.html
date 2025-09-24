@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Payment Successful — Murica1stNicotine</title>
+  <title>Order Received — Murica1stNicotine</title>
   <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
@@ -18,11 +18,16 @@
   </header>
   <main class="wrap">
     <section class="card">
-      <h1>✅ Payment Successful</h1>
-      <p>Thanks for your order! We’re preparing your delivery.</p>
-      <p class="muted">You will receive an email receipt from our payment processor.</p>
+      <h1>✅ Order Received</h1>
+      <p>Thanks! We’ll verify age at delivery and collect payment in person.</p>
+      <p class="muted">Order ID: <strong id="oid">—</strong> &middot; Total: $<strong id="tot">—</strong></p>
       <a class="btn" href="./">Back to store</a>
     </section>
   </main>
+  <script>
+    const u = new URL(location.href);
+    document.getElementById('oid').textContent = u.searchParams.get('orderId') || '—';
+    document.getElementById('tot').textContent = u.searchParams.get('total') || '—';
+  </script>
 </body>
 </html>
