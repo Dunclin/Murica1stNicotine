@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "Courier",
+    "slug": "murica1stnicotine-courier",
+    "scheme": "courier",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {},
+    "web": {},
+    "extra": {
+      "eas": {
+        "projectId": "<REPLACE_WITH_PROJECT_ID>"
+      }
+    }
+  }
+}
