@@ -5,13 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Murica1stNicotine — ZYN + Disposables (Delivery)</title>
 
-  <!-- Your styles -->
   <link rel="stylesheet" href="styles.css"/>
 
   <!-- Leaflet + Routing + Geocoder (FREE, no API keys) -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-control-geocoder/2.4.0/Control.Geocoder.css">
+
+  <!-- Fallback ensure-height in case styles.css isn’t loaded -->
+  <style>#map{height:360px;min-height:320px}</style>
 </head>
 <body>
   <!-- Age Gate Modal -->
@@ -241,9 +243,9 @@
   </script>
 
   <!-- Leaflet libs -->
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
-  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-control-geocoder/2.4.0/Control.Geocoder.js"></script>
 
   <!-- App logic -->
   <script src="app.js"></script>
