@@ -1,4 +1,4 @@
-// Simple cart + Authorize.Net Accept Hosted redirect
+// ---------- Cart + UI ----------
 const CART_KEY = 'zyn_cart_v1';
 const cartBtn = document.getElementById('cart-btn');
 const drawer = document.getElementById('cart-drawer');
@@ -74,34 +74,7 @@ cartItemsEl.addEventListener('click', (e) => {
   saveCart(cart);
 });
 
-checkoutBtn.addEventListener('click', async () => {
-  const cart = getCart();
-  if (!cart.length) return alert('Your cart is empty.');
-
-  // Calculate client-side (server will re-calc)
-  const total = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
-  const address = (document.getElementById('addr')?.value || '').trim();
-
-  try {
-    const res = await fetch(`${window.API_BASE}/api/create-checkout`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cart, total, address })
-    });
-    if (!res.ok) throw new Error('Checkout failed');
-    const data = await res.json();
-    if (data.payUrl) {
-      window.location.href = data.payUrl; // redirect to hosted payment
-    } else {
-      alert('Payment link not created. Check server logs.');
-    }
-  } catch (err) {
-    console.error(err);
-    alert('Could not start checkout. Try again or contact support.');
-  }
-});
-
-// Simple age gate with sessionStorage
+// Age gate
 function maybeShowAgeGate(){
   if (sessionStorage.getItem('age_ok') === '1') return;
   ageGate.classList.remove('hidden');
@@ -117,16 +90,19 @@ ageNo.addEventListener('click', () => {
 renderCart();
 maybeShowAgeGate();
 
-/* ===== Delivery quote logic ===== */
+// ---------- Delivery & Maps ----------
 const addrInput = document.getElementById('addr');
 const quoteBtn = document.getElementById('quote');
-const distKmEl = document.getElementById('dist-km');
-const distMiEl = document.getElementById('dist-mi');
+const quoteStatus = document.getElementById('quote-status');
 const feeDeliveryEl = document.getElementById('fee-delivery');
 const feeGasEl = document.getElementById('fee-gas');
 const grandTotalEl = document.getElementById('grand-total');
-const quoteStatus = document.getElementById('quote-status');
+const routeMiEl = document.getElementById('route-mi');
 
+let map, geocoder, directionsService, directionsRenderer;
+let shopMarker, userMarker;
+let shopLatLng = null;
+let destLatLng = null;
 let lastQuote = null;
 
 function getCartTotal(){
@@ -138,24 +114,99 @@ function updateGrandTotal(){
   grandTotalEl.textContent = (cartTotal + fees).toFixed(2);
 }
 
+// Called by Google Maps JS API (callback=initMap in index.html)
+window.initMap = function(){
+  geocoder = new google.maps.Geocoder();
+  directionsService = new google.maps.DirectionsService();
+  directionsRenderer = new google.maps.DirectionsRenderer({ suppressMarkers: true });
+
+  map = new google.maps.Map(document.getElementById('map'), {
+    center: { lat: 39.7597, lng: -76.6760 }, // fallback to Railroad, PA
+    zoom: 12,
+    mapTypeControl: false,
+    streetViewControl: false
+  });
+  directionsRenderer.setMap(map);
+
+  // Geocode shop address and pin it
+  const shopAddress = window.SHOP_ADDRESS || '30 South Main St, Railroad, PA 17355';
+  geocoder.geocode({ address: shopAddress }, (results, status) => {
+    if (status === 'OK' && results[0]) {
+      const loc = results[0].geometry.location;
+      shopLatLng = { lat: loc.lat(), lng: loc.lng() };
+      shopMarker = new google.maps.Marker({
+        position: shopLatLng,
+        map,
+        label: 'S',
+        title: 'Shop'
+      });
+      map.setCenter(shopLatLng);
+    }
+  });
+
+  // Places autocomplete for the destination input
+  const ac = new google.maps.places.Autocomplete(addrInput, {
+    types: ['geocode'],
+    componentRestrictions: { country: 'us' }
+  });
+  ac.addListener('place_changed', () => {
+    const place = ac.getPlace();
+    if (!place.geometry || !place.geometry.location) return;
+    const loc = place.geometry.location;
+    destLatLng = { lat: loc.lat(), lng: loc.lng() };
+
+    // Put a marker for the user
+    if (userMarker) userMarker.setMap(null);
+    userMarker = new google.maps.Marker({
+      position: destLatLng,
+      map,
+      label: 'D',
+      title: 'Delivery'
+    });
+
+    // Draw route & show route distance
+    if (shopLatLng) {
+      directionsService.route({
+        origin: shopLatLng,
+        destination: destLatLng,
+        travelMode: google.maps.TravelMode.DRIVING
+      }, (res, status) => {
+        if (status === 'OK' && res.routes[0] && res.routes[0].legs[0]) {
+          directionsRenderer.setDirections(res);
+          const meters = res.routes[0].legs.reduce((m, leg) => m + (leg.distance?.value || 0), 0);
+          const miles = meters / 1609.344;
+          routeMiEl.textContent = miles.toFixed(2);
+          // Clear stale quote to encourage recalculation
+          lastQuote = null;
+          updateGrandTotal();
+        }
+      });
+    }
+
+    // Focus the quote button hint
+    quoteStatus.textContent = 'Click "Get delivery quote" to compute fees.';
+  });
+};
+
 async function requestQuote(){
   const address = (addrInput?.value || '').trim();
-  if (!address) {
-    alert('Enter a delivery address first.');
-    return;
-  }
+  if (!address) return alert('Enter a delivery address first.');
+  if (!destLatLng) quoteStatus.textContent = 'Tip: choose an address from the dropdown for best accuracy.';
+
   quoteStatus.textContent = 'Calculating…';
   try {
     const res = await fetch(`${window.API_BASE}/api/quote`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address })
+      body: JSON.stringify({
+        address,
+        lat: destLatLng?.lat,
+        lng: destLatLng?.lng
+      })
     });
     if (!res.ok) throw new Error('Quote failed');
     const data = await res.json();
     lastQuote = data;
-    distKmEl.textContent = data.distance_km.toFixed(2);
-    distMiEl.textContent = (data.distance_km * 0.621371).toFixed(2);
     feeDeliveryEl.textContent = data.fees.delivery.toFixed(2);
     feeGasEl.textContent = data.fees.gas.toFixed(2);
     updateGrandTotal();
@@ -165,10 +216,38 @@ async function requestQuote(){
     quoteStatus.textContent = 'Could not calculate. Try a full address and ZIP.';
   }
 }
-
 if (quoteBtn) quoteBtn.addEventListener('click', requestQuote);
 
 // Recompute grand total when cart changes
 const _saveCartOrig = saveCart;
 saveCart = function(c){ _saveCartOrig(c); updateGrandTotal(); };
 updateGrandTotal();
+
+// ---------- Place Order (pay on delivery) ----------
+checkoutBtn.addEventListener('click', async () => {
+  const cart = getCart();
+  if (!cart.length) return alert('Your cart is empty.');
+  const address = (addrInput?.value || '').trim();
+  if (!address) return alert('Enter a delivery address.');
+
+  try {
+    const res = await fetch(`${window.API_BASE}/api/order`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        address,
+        lat: destLatLng?.lat,
+        lng: destLatLng?.lng,
+        cart
+      })
+    });
+    if (!res.ok) throw new Error('Order failed');
+    const data = await res.json();
+    // Clear cart and go to success page with order ID + total
+    localStorage.removeItem(CART_KEY);
+    window.location.href = `success.html?orderId=${encodeURIComponent(data.orderId)}&total=${encodeURIComponent(data.total.toFixed(2))}`;
+  } catch (e) {
+    console.error(e);
+    alert('Could not place order. Please try again.');
+  }
+});
