@@ -1,128 +1,120 @@
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
-const https = require('https');
-const cors = require('cors');
+const path = require('path');
+const { APIContracts, APIControllers } = require('authorizenet');
 
 const app = express();
 app.use(bodyParser.json());
-app.use(cors({ origin: true, methods: ['GET','POST'] }));
 
-// ---- ENV ----
+// Config from env
 const {
-  STORE_LAT = '39.7597',   // Railroad, PA approx
-  STORE_LON = '-76.6760',
-  DELIVERY_BASE_FEE = '4.00',
-  DELIVERY_BASE_RADIUS_KM = '5',
-  DELIVERY_PER_KM_BEYOND = '0.75',
-  GAS_FEE_PER_KM = '0.10'
+  API_LOGIN_ID,
+  TRANSACTION_KEY,
+  SIGNATURE_KEY,
+  MERCHANT_NAME,
+  PUBLIC_BASE_URL, // e.g., https://your-app.onrender.com
+  RETURN_URL_SUCCESS, // e.g., https://yourdomain.com/success.html
+  RETURN_URL_CANCEL   // e.g., https://yourdomain.com/cancel.html
 } = process.env;
 
-// ---- Helpers ----
-function haversineKm(lat1, lon1, lat2, lon2){
-  const toRad = d => d * Math.PI / 180;
-  const R = 6371;
-  const dLat = toRad(lat2-lat1);
-  const dLon = toRad(lon2-lon1);
-  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-function geocodeNominatim(address){
-  return new Promise((resolve, reject) => {
-    if (!address) return reject(new Error('No address'));
-    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`;
-    const req = https.get(url, { headers: { 'User-Agent': 'murica1stnicotine/1.0 (contact: merchant@example.com)' }}, (res) => {
-      let data = '';
-      res.on('data', d => data += d);
-      res.on('end', () => {
-        try {
-          const j = JSON.parse(data);
-          if (Array.isArray(j) && j.length){
-            resolve({ lat: parseFloat(j[0].lat), lon: parseFloat(j[0].lon) });
-          } else reject(new Error('No results'));
-        } catch (e){ reject(e); }
-      });
-    });
-    req.on('error', reject);
-  });
-}
-
-function calcFees(distanceKm){
-  const baseFee = parseFloat(DELIVERY_BASE_FEE);
-  const baseRadius = parseFloat(DELIVERY_BASE_RADIUS_KM);
-  const perKm = parseFloat(DELIVERY_PER_KM_BEYOND);
-  const gasPerKm = parseFloat(GAS_FEE_PER_KM);
-
-  let delivery = baseFee + Math.max(0, distanceKm - baseRadius) * perKm;
-  const gas = distanceKm * gasPerKm;
-  const round = x => Math.round(x * 100) / 100;
-  return { delivery: round(delivery), gas: round(gas) };
-}
-
-// ---- Routes ----
+// Health
 app.get('/health', (_req,res)=>res.send('ok'));
 
-// POST /api/quote  -> { address, lat, lng }  -> { distance_km, fees, coords }
-app.post('/api/quote', async (req, res) => {
+// Create checkout: builds an Accept Hosted form token for total amount
+app.post('/api/create-checkout', async (req, res) => {
   try {
-    const { address, lat, lng } = req.body || {};
-    const storeLat = parseFloat(STORE_LAT);
-    const storeLon = parseFloat(STORE_LON);
-
-    let dest;
-    if (typeof lat === 'number' && typeof lng === 'number') {
-      dest = { lat, lon: lng };
-    } else {
-      dest = await geocodeNominatim(address);
+    const { cart, total } = req.body;
+    if (!Array.isArray(cart) || typeof total !== 'number') {
+      return res.status(400).json({ error: 'Invalid payload' });
     }
 
-    const distance_km = haversineKm(storeLat, storeLon, dest.lat, dest.lon);
-    const fees = calcFees(distance_km);
-    return res.json({ distance_km, fees, coords: { lat: dest.lat, lon: dest.lon } });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: 'Could not compute quote' });
+    // Authorize.Net authentication
+    const merchantAuthenticationType = new APIContracts.MerchantAuthenticationType();
+    merchantAuthenticationType.setName(API_LOGIN_ID);
+    merchantAuthenticationType.setTransactionKey(TRANSACTION_KEY);
+
+    // Line items (optional; kept minimal here)
+    const lineItems = new APIContracts.ArrayOfLineItem();
+    cart.slice(0, 30).forEach((item, idx) => {
+      const li = new APIContracts.LineItemType();
+      li.setItemId((item.sku || 'SKU').toString().slice(0,30));
+      li.setName((item.name || 'Item').toString().slice(0,30));
+      li.setQuantity(item.qty || 1);
+      li.setUnitPrice(item.price || 0);
+      lineItems.getLineItem().push(li);
+    });
+
+    // Transaction request
+    const transactionRequestType = new APIContracts.TransactionRequestType();
+    transactionRequestType.setTransactionType(APIContracts.TransactionTypeEnum.AUTHCAPTURETRANSACTION);
+    transactionRequestType.setAmount(Number(total.toFixed(2)));
+    transactionRequestType.setLineItems(lineItems);
+
+    // Hosted payment settings
+    const settingList = new APIContracts.ArrayOfSetting();
+    const settings = [
+      { settingName: 'hostedPaymentReturnOptions', settingValue: JSON.stringify({
+          showReceipt: true,
+          url: RETURN_URL_SUCCESS || (PUBLIC_BASE_URL + '/receipt'),
+          urlText: 'Return to Store',
+          cancelUrl: RETURN_URL_CANCEL || (PUBLIC_BASE_URL + '/cancel'),
+          cancelUrlText: 'Cancel'
+      })},
+      { settingName: 'hostedPaymentButtonOptions', settingValue: JSON.stringify({ text: 'Pay Now' })},
+      { settingName: 'hostedPaymentPaymentOptions', settingValue: JSON.stringify({ cardCodeRequired: true })},
+      { settingName: 'hostedPaymentOrderOptions', settingValue: JSON.stringify({ show: true, merchantName: MERCHANT_NAME || 'ZYN Shop' })},
+      { settingName: 'hostedPaymentBillingAddressOptions', settingValue: JSON.stringify({ show: true, required: true })}
+    ];
+    settings.forEach(s => {
+      const setting = new APIContracts.SettingType();
+      setting.setSettingName(s.settingName);
+      setting.setSettingValue(s.settingValue);
+      settingList.getSetting().push(setting);
+    });
+
+    const request = new APIContracts.GetHostedPaymentPageRequest();
+    request.setMerchantAuthentication(merchantAuthenticationType);
+    request.setTransactionRequest(transactionRequestType);
+    request.setHostedPaymentSettings(settingList);
+
+    const ctrl = new APIControllers.GetHostedPaymentPageController(request.getJSON());
+    ctrl.execute(() => {
+      const apiResponse = ctrl.getResponse();
+      const response = new APIContracts.GetHostedPaymentPageResponse(apiResponse);
+
+      if (response != null && response.getMessages().getResultCode() === APIContracts.MessageTypeEnum.OK) {
+        const token = response.getToken();
+        // Return a URL that auto-posts the token to Authorize.Net
+        const payUrl = `${PUBLIC_BASE_URL}/pay/${encodeURIComponent(token)}`;
+        return res.json({ payUrl });
+      } else {
+        const code = response?.getMessages().getMessage()[0].getCode();
+        const text = response?.getMessages().getMessage()[0].getText();
+        return res.status(500).json({ error: 'Failed to create hosted payment token', code, text });
+      }
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Server error' });
   }
 });
 
-// POST /api/order -> { address, lat, lng, cart } -> { orderId, total, fees }
-app.post('/api/order', async (req, res) => {
-  try {
-    const { address, lat, lng, cart } = req.body || {};
-    if (!Array.isArray(cart) || cart.length === 0) {
-      return res.status(400).json({ error: 'Empty cart' });
-    }
-    if (!address) {
-      return res.status(400).json({ error: 'Missing address' });
-    }
-
-    // Recompute cart total server-side
-    const cartTotal = cart.reduce((sum, i) => sum + (Number(i.price)||0) * (Number(i.qty)||0), 0);
-
-    const storeLat = parseFloat(STORE_LAT);
-    const storeLon = parseFloat(STORE_LON);
-
-    let dest;
-    if (typeof lat === 'number' && typeof lng === 'number') {
-      dest = { lat, lon: lng };
-    } else {
-      dest = await geocodeNominatim(address);
-    }
-
-    const distance_km = haversineKm(storeLat, storeLon, dest.lat, dest.lon);
-    const fees = calcFees(distance_km);
-    const total = Math.round((cartTotal + fees.delivery + fees.gas) * 100) / 100;
-
-    // Make an order ID and log it (replace with DB/email as needed)
-    const orderId = 'ORD-' + Date.now().toString(36).toUpperCase();
-    console.log('[NEW ORDER]', { orderId, address, coords: dest, cart, fees, total });
-
-    return res.json({ orderId, total, fees, distance_km });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: 'Order creation failed' });
-  }
+// Auto-submit form that posts token to Authorize.Net hosted page
+app.get('/pay/:token', (req, res) => {
+  const token = req.params.token;
+  const html = `<!doctype html>
+  <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Redirecting to Secure Checkout…</title></head>
+  <body>
+    <form id="pay" method="post" action="https://accept.authorize.net/payment/payment">
+      <input type="hidden" name="token" value="${token}"/>
+    </form>
+    <script>document.getElementById('pay').submit()</script>
+    <p>Redirecting to secure payment…</p>
+  </body></html>`;
+  res.setHeader('Content-Type','text/html').send(html);
 });
 
 const port = process.env.PORT || 8080;

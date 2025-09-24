@@ -3,6 +3,7 @@ const CART_KEY = 'zyn_cart_v1';
 const cartBtn = document.getElementById('cart-btn');
 const drawer = document.getElementById('cart-drawer');
 const closeCart = document.getElementById('close-cart');
+const overlay = document.getElementById('cart-overlay');
 const cartItemsEl = document.getElementById('cart-items');
 const cartTotalEl = document.getElementById('cart-total');
 const cartCountEl = document.getElementById('cart-count');
@@ -56,16 +57,31 @@ document.querySelectorAll('.add').forEach(btn => {
     const flavor = document.querySelector(`select.flavor[data-sku="${sku}"]`).value;
     const qty = parseInt(document.querySelector(`input.qty[data-sku="${sku}"]`).value, 10) || 1;
     addToCart(sku, name, price, flavor, qty);
-    drawer.classList.add('open');
-    // Ensure Leaflet resizes if drawer pushed layout
-    setTimeout(() => { if (window._leafletMap) window._leafletMap.invalidateSize(); }, 100);
+    openCart();
   });
 });
 
-cartBtn.addEventListener('click', () => drawer.classList.add('open'));
-closeCart.addEventListener('click', () => {
+function openCart(){
+  if (!drawer) return;
+  drawer.classList.add('open'); drawer.classList.remove('hidden');
+  overlay?.classList.add('open'); overlay?.classList.remove('hidden');
+  setTimeout(() => { if (window._leafletMap) window._leafletMap.invalidateSize(); }, 120);
+}
+function closeCartFn(){
+  if (!drawer) return;
   drawer.classList.remove('open');
-  setTimeout(() => { if (window._leafletMap) window._leafletMap.invalidateSize(); }, 200);
+  overlay?.classList.remove('open');
+  setTimeout(() => {
+    drawer.classList.add('hidden');
+    overlay?.classList.add('hidden');
+  }, 180);
+}
+
+cartBtn?.addEventListener('click', openCart);
+closeCart?.addEventListener('click', closeCartFn);
+overlay?.addEventListener('click', closeCartFn);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && drawer?.classList.contains('open')) closeCartFn();
 });
 
 cartItemsEl.addEventListener('click', (e) => {
@@ -83,8 +99,8 @@ function maybeShowAgeGate(){
   if (sessionStorage.getItem('age_ok') === '1') return;
   ageGate.classList.remove('hidden');
 }
-ageYes.addEventListener('click', () => { sessionStorage.setItem('age_ok','1'); ageGate.classList.add('hidden'); });
-ageNo.addEventListener('click', () => { window.location.href = 'https://www.fda.gov/tobacco-products'; });
+ageYes?.addEventListener('click', () => { sessionStorage.setItem('age_ok','1'); ageGate.classList.add('hidden'); });
+ageNo?.addEventListener('click', () => { window.location.href = 'https://www.fda.gov/tobacco-products'; });
 
 renderCart();
 maybeShowAgeGate();
@@ -114,16 +130,14 @@ function updateGrandTotal(){
 
 /** Initialize Leaflet + geocoder + shop pin */
 function initLeafletDelivery(){
-  // Default center around Railroad, PA in case geocode is slow
   const fallback = { lat: 39.7597, lng: -76.6760 };
-
   lMap = L.map('map').setView([fallback.lat, fallback.lng], 12);
-  window._leafletMap = lMap; // expose for invalidateSize()
+  window._leafletMap = lMap;
+
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap'
   }).addTo(lMap);
 
-  // Programmatic geocoder (provider) for shop address
   const provider = L.Control.Geocoder.nominatim();
   const shopAddress = window.SHOP_ADDRESS || '30 South Main St, Railroad, PA 17355';
   provider.geocode(shopAddress, (results) => {
@@ -134,14 +148,12 @@ function initLeafletDelivery(){
       lMap.setView([c.lat, c.lng], 13);
       setTimeout(() => lMap.invalidateSize(), 50);
     } else {
-      // fallback if geocode fails
       shopLatLng = fallback;
       shopMarker = L.marker([fallback.lat, fallback.lng]).bindPopup('Shop').addTo(lMap);
       setTimeout(() => lMap.invalidateSize(), 50);
     }
   });
 
-  // Add a geocoder control for the user destination search
   const geocoderCtrl = L.Control.geocoder({ defaultMarkGeocode: false }).addTo(lMap);
   geocoderCtrl.on('markgeocode', (e) => {
     const c = e.geocode.center;
@@ -154,7 +166,6 @@ function initLeafletDelivery(){
     quoteStatus.textContent = 'Click "Get delivery quote" to compute fees.';
   });
 
-  // If user clicks on the map, set destination
   lMap.on('click', (e) => {
     destLatLng = { lat: e.latlng.lat, lng: e.latlng.lng };
     if (destMarker) destMarker.remove();
@@ -163,11 +174,9 @@ function initLeafletDelivery(){
     quoteStatus.textContent = 'Click "Get delivery quote" to compute fees.';
   });
 
-  // Final safety resize once page is fully ready
   window.addEventListener('load', () => setTimeout(() => lMap.invalidateSize(), 100));
 }
 
-/** Draw route via OSRM demo and update visible route miles */
 function drawRouteAndUpdate(){
   if (!shopLatLng || !destLatLng) return;
   if (lRouter) { lMap.removeControl(lRouter); lRouter = null; }
@@ -218,15 +227,14 @@ async function requestQuote(){
     quoteStatus.textContent = 'Could not calculate. Try a full address and ZIP.';
   }
 }
-if (quoteBtn) quoteBtn.addEventListener('click', requestQuote);
+quoteBtn?.addEventListener('click', requestQuote);
 
-// Update grand total when cart changes
 const _saveCartOrig = saveCart;
 saveCart = function(c){ _saveCartOrig(c); updateGrandTotal(); };
 updateGrandTotal();
 
 /* -------- Place Order (Pay on Delivery) -------- */
-checkoutBtn.addEventListener('click', async () => {
+checkoutBtn?.addEventListener('click', async () => {
   const cart = getCart();
   if (!cart.length) return alert('Your cart is empty.');
   const address = (addrInput?.value || '').trim();

@@ -35,7 +35,7 @@ input[type=number],select,input[type=text]{width:100%;padding:.55rem;border:1px 
 .muted{color:var(--muted)}
 .notice{margin-top:1.5rem;padding:1rem;border:1px dashed var(--border);border-radius:12px;background:#fff}
 /* Drawer */
-.drawer{position:fixed;right:0;top:0;height:100vh;width:380px;background:#fff;border-left:1px solid var(--border);transform:translateX(100%);transition:transform .2s ease;display:flex;flex-direction:column;box-shadow:-10px 0 30px rgba(2,6,23,.08)}
+.drawer{position:fixed;right:0;top:0;height:100vh;width:380px;max-width:92vw;background:#fff;border-left:1px solid var(--border);transform:translateX(100%);transition:transform .2s ease;display:flex;flex-direction:column;box-shadow:-10px 0 30px rgba(2,6,23,.08);z-index:50}
 .drawer.open{transform:translateX(0)}
 .drawer-head,.drawer-foot{padding:1rem;border-bottom:1px solid var(--border)}
 .drawer-foot{border-top:1px solid var(--border);margin-top:auto;display:flex;align-items:center;justify-content:space-between}
@@ -45,8 +45,11 @@ input[type=number],select,input[type=text]{width:100%;padding:.55rem;border:1px 
 .qty-controls{display:flex;gap:.5rem;align-items:center}
 .qty-btn{border:1px solid var(--border);border-radius:8px;padding:.25rem .5rem;cursor:pointer;background:#fff}
 /* Modal */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:60}
 .modal-card{background:#fff;border-radius:16px;padding:1.25rem;max-width:440px;width:92%;text-align:center;border:1px solid var(--border)}
 .hidden{display:none}
-/* Map */
+/* Overlay for cart drawer */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .18s ease;z-index:49}
+.overlay.open{opacity:1;pointer-events:auto}
+/* Map MUST have an explicit height */
 .map{width:100%;height:360px;min-height:320px;border-radius:12px;border:1px solid var(--border);background:#e5e7eb}

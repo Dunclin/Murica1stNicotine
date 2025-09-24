@@ -25,7 +25,7 @@
         <button id="age-yes" class="btn">Yes, I am 21+</button>
         <button id="age-no" class="btn btn-secondary">No</button>
       </div>
-      <p class="fineprint">We use third-party verification at delivery. ID may be required.</p>
+      <p class="fineprint">We verify age at delivery. ID may be required.</p>
     </div>
   </div>
 
@@ -43,8 +43,13 @@
       <a href="#delivery">Delivery</a>
       <a href="#info">Info</a>
     </nav>
-    <button id="cart-btn" class="btn cart-cta">Cart (<span id="cart-count">0</span>)</button>
+    <button id="cart-btn" class="btn cart-cta" aria-haspopup="dialog" aria-controls="cart-drawer">
+      Cart (<span id="cart-count">0</span>)
+    </button>
   </header>
+
+  <!-- Cart backdrop overlay (click to close) -->
+  <div id="cart-overlay" class="overlay hidden" aria-hidden="true"></div>
 
   <main class="wrap">
     <!-- HERO -->
@@ -224,10 +229,10 @@
   </main>
 
   <!-- Cart Drawer -->
-  <div id="cart-drawer" class="drawer hidden" aria-labelledby="cart-title">
+  <div id="cart-drawer" class="drawer hidden" role="dialog" aria-labelledby="cart-title" aria-modal="true">
     <div class="drawer-head">
       <h3 id="cart-title">Your Cart</h3>
-      <button id="close-cart" class="btn btn-secondary">Close</button>
+      <button id="close-cart" class="btn btn-secondary" aria-label="Close Cart">Close</button>
     </div>
     <div id="cart-items"></div>
     <div class="drawer-foot">
