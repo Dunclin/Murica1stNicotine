@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My GitHub Website</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 0; line-height: 1.6; }
+    header { padding: 2.5rem 1.25rem; text-align: center; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 0 1.25rem 3rem; }
+    nav a { margin: 0 .5rem; text-decoration: none; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 1rem; margin: 1rem 0; }
+    footer { padding: 2rem 1.25rem; text-align: center; color: #666; border-top: 1px solid #eee; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>👋 Hello, world</h1>
+    <nav>
+      <a href="/">Home</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+  <main class="wrap">
+    <section class="card" id="about">
+      <h2>About</h2>
+      <p>This site is hosted on <strong>GitHub Pages</strong>. Edit <code>index.html</code> and push to update instantly.</p>
+    </section>
+    <section class="card" id="contact">
+      <h2>Contact</h2>
+      <p>Email me at <a href="mailto:you@example.com">you@example.com</a>.</p>
+    </section>
+  </main>
+  <footer>© <span id="y"></span> Me</footer>
+  <script>document.getElementById('y').textContent = new Date().getFullYear()</script>
+</body>
+</html>
