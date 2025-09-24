@@ -128,15 +128,12 @@ function updateGrandTotal(){
   grandTotalEl.textContent = (cartTotal + fees).toFixed(2);
 }
 
-/** Initialize Leaflet + geocoder + shop pin */
 function initLeafletDelivery(){
   const fallback = { lat: 39.7597, lng: -76.6760 };
   lMap = L.map('map').setView([fallback.lat, fallback.lng], 12);
   window._leafletMap = lMap;
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap'
-  }).addTo(lMap);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(lMap);
 
   const provider = L.Control.Geocoder.nominatim();
   const shopAddress = window.SHOP_ADDRESS || '30 South Main St, Railroad, PA 17355';
@@ -159,8 +156,7 @@ function initLeafletDelivery(){
     const c = e.geocode.center;
     destLatLng = { lat: c.lat, lng: c.lng };
     if (destMarker) destMarker.remove();
-    destMarker = L.marker([c.lat, c.lng], { title: 'Delivery' })
-      .bindPopup(e.geocode.name).addTo(lMap);
+    destMarker = L.marker([c.lat, c.lng], { title: 'Delivery' }).addTo(lMap);
     addrInput.value = e.geocode.name;
     drawRouteAndUpdate();
     quoteStatus.textContent = 'Click "Get delivery quote" to compute fees.';
@@ -182,10 +178,7 @@ function drawRouteAndUpdate(){
   if (lRouter) { lMap.removeControl(lRouter); lRouter = null; }
 
   lRouter = L.Routing.control({
-    waypoints: [
-      L.latLng(shopLatLng.lat, shopLatLng.lng),
-      L.latLng(destLatLng.lat, destLatLng.lng)
-    ],
+    waypoints: [ L.latLng(shopLatLng.lat, shopLatLng.lng), L.latLng(destLatLng.lat, destLatLng.lng) ],
     router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }),
     addWaypoints: false, draggableWaypoints: false, show: false, fitSelectedRoutes: true
   })
@@ -200,7 +193,6 @@ function drawRouteAndUpdate(){
 
 document.addEventListener('DOMContentLoaded', initLeafletDelivery);
 
-/* -------- Quote + Order (uses your existing server) -------- */
 async function requestQuote(){
   const address = (addrInput?.value || '').trim();
   if (!address && !destLatLng) return alert('Enter or pick a delivery address.');
@@ -209,11 +201,7 @@ async function requestQuote(){
     const res = await fetch(`${window.API_BASE}/api/quote`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        address,
-        lat: destLatLng?.lat,
-        lng: destLatLng?.lng
-      })
+      body: JSON.stringify({ address, lat: destLatLng?.lat, lng: destLatLng?.lng })
     });
     if (!res.ok) throw new Error('Quote failed');
     const data = await res.json();
@@ -233,7 +221,6 @@ const _saveCartOrig = saveCart;
 saveCart = function(c){ _saveCartOrig(c); updateGrandTotal(); };
 updateGrandTotal();
 
-/* -------- Place Order (Pay on Delivery) -------- */
 checkoutBtn?.addEventListener('click', async () => {
   const cart = getCart();
   if (!cart.length) return alert('Your cart is empty.');
@@ -244,12 +231,7 @@ checkoutBtn?.addEventListener('click', async () => {
     const res = await fetch(`${window.API_BASE}/api/order`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        address,
-        lat: destLatLng?.lat,
-        lng: destLatLng?.lng,
-        cart
-      })
+      body: JSON.stringify({ address, lat: destLatLng?.lat, lng: destLatLng?.lng, cart })
     });
     if (!res.ok) throw new Error('Order failed');
     const data = await res.json();

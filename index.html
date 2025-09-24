@@ -12,11 +12,9 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-control-geocoder/2.4.0/Control.Geocoder.css">
 
-  <!-- Fallback ensure-height in case styles.css isn’t loaded -->
   <style>#map{height:360px;min-height:320px}</style>
 </head>
 <body>
-  <!-- Age Gate Modal -->
   <div id="age-gate" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="age-title">
     <div class="modal-card">
       <h2 id="age-title">Are you 21 or older?</h2>
@@ -48,17 +46,14 @@
     </button>
   </header>
 
-  <!-- Cart backdrop overlay (click to close) -->
   <div id="cart-overlay" class="overlay hidden" aria-hidden="true"></div>
 
   <main class="wrap">
-    <!-- HERO -->
     <section class="hero">
       <h1>Quality. Compliant. Fast.</h1>
       <p class="muted">Pay on delivery. Age verification required.</p>
     </section>
 
-    <!-- ZYN -->
     <section id="zyn" class="section">
       <h2 class="section-title">ZYN Nicotine Pouches</h2>
       <div class="grid">
@@ -104,7 +99,6 @@
       </div>
     </section>
 
-    <!-- Disposables -->
     <section id="disposables" class="section">
       <h2 class="section-title">Disposable Vapes</h2>
       <div class="grid">
@@ -198,7 +192,6 @@
       </div>
     </section>
 
-    <!-- Delivery + Leaflet map -->
     <section id="delivery" class="section">
       <h2 class="section-title">Delivery Details</h2>
       <div class="card">
@@ -206,7 +199,6 @@
           <input type="text" id="addr" placeholder="Start typing: 123 Main St, City, State"/>
         </label>
 
-        <!-- Leaflet map -->
         <div id="map" class="map" aria-label="Delivery map"></div>
 
         <div class="row" style="margin-top:.75rem">
@@ -228,7 +220,6 @@
     </section>
   </main>
 
-  <!-- Cart Drawer -->
   <div id="cart-drawer" class="drawer hidden" role="dialog" aria-labelledby="cart-title" aria-modal="true">
     <div class="drawer-head">
       <h3 id="cart-title">Your Cart</h3>
@@ -241,18 +232,14 @@
     </div>
   </div>
 
-  <!-- Config -->
   <script>
     window.API_BASE = "http://localhost:8080";  /* change to your deployed server URL */
     window.SHOP_ADDRESS = "30 South Main St, Railroad, PA 17355";
   </script>
 
-  <!-- Leaflet libs -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-control-geocoder/2.4.0/Control.Geocoder.js"></script>
-
-  <!-- App logic -->
   <script src="app.js"></script>
 </body>
 </html>
