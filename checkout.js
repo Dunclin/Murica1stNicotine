@@ -24,3 +24,27 @@ async function ensureCoords(address){ if (destLatLng && typeof destLatLng.lat===
 quoteBtn?.addEventListener('click',async()=>{const address=(addrInput?.value||'').trim(); quoteStatus.textContent='Calculating…'; try{ const coords=await ensureCoords(address); const res=await fetch(`${window.API_BASE}/api/quote`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address,lat:coords.lat,lng:coords.lng})}); const txt=await res.text(); let data={}; try{data=JSON.parse(txt);}catch{} if(!res.ok) throw new Error(`HTTP ${res.status} ${txt}`); lastQuote=data; feeDeliveryEl.textContent=data.fees.delivery.toFixed(2); feeGasEl.textContent=data.fees.gas.toFixed(2); const miles = (typeof data.distance_km==='number') ? (data.distance_km*0.621371) : haversineMiles(shopLatLng.lat,shopLatLng.lng,coords.lat,coords.lng); routeMiEl.textContent=miles.toFixed(2); updateGrandTotal(); quoteStatus.textContent='Quote updated.'; }catch(e){ console.error(e); quoteStatus.textContent='Could not calculate — ' + (e.message||'error'); }});
 document.getElementById('place-order')?.addEventListener('click',async()=>{const cart=getCart();if(!cart.length)return alert('Your cart is empty.');const address=(addrInput?.value||'').trim();const phone=(document.getElementById('phone')?.value||'').trim();if(!phone)return alert('Please enter a phone number for the driver.'); try{ const coords=await ensureCoords(address); const res=await fetch(`${window.API_BASE}/api/order`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address,lat:coords.lat,lng:coords.lng,phone,cart})}); const txt=await res.text(); if(!res.ok) throw new Error(`HTTP ${res.status} ${txt}`); const data=JSON.parse(txt); localStorage.removeItem(CART_KEY); window.location.href=`success.html?orderId=${encodeURIComponent(data.orderId)}&total=${encodeURIComponent(data.total.toFixed(2))}`; }catch(e){ alert('Could not place order — ' + (e.message||'error')); }});
 document.addEventListener('DOMContentLoaded',initMap);
+
+
+/* PATCH: address list selection via mousedown to avoid blur */
+(function(){
+  try {
+    const list = document.getElementById('addr-ac');
+    const input = document.getElementById('addr');
+    if (!list || !input) return;
+    list.addEventListener('mousedown', (e) => {
+      const item = e.target.closest('.ac-item');
+      if (!item) return;
+      e.preventDefault();
+      const label = item.textContent.trim();
+      const lat = parseFloat(item.dataset.lat);
+      const lon = parseFloat(item.dataset.lon);
+      if (typeof chooseAddr === 'function') {
+        chooseAddr({ label, lat, lon });
+      } else {
+        input.value = label;
+      }
+      list.classList.add('hidden');
+    }, true);
+  } catch (e) {}
+})();

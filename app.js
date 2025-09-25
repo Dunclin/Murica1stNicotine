@@ -35,3 +35,28 @@ addrInput?.addEventListener('input',e=>fetchSug(e.target.value));document.addEve
 async function ensureCoords(address){ if (destLatLng && typeof destLatLng.lat==='number' && typeof destLatLng.lng==='number'){ return destLatLng; } if (!address) throw new Error('No address'); const url=`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`; const r=await fetch(url,{headers:{'User-Agent':'murica1stnicotine/1.0 (contact: merchant@example.com)'}}); const j=await r.json(); if(!Array.isArray(j)||!j.length) throw new Error('Address not found'); destLatLng={lat:parseFloat(j[0].lat),lng:parseFloat(j[0].lon)}; L.marker([destLatLng.lat,destLatLng.lng]).addTo(lMap); drawRoute(); return destLatLng; }
 quoteBtn?.addEventListener('click',async()=>{const address=(addrInput?.value||'').trim(); quoteStatus && (quoteStatus.textContent='Calculating…'); try{ const coords=await ensureCoords(address); const res=await fetch(`${window.API_BASE}/api/quote`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address,lat:coords.lat,lng:coords.lng})}); const txt=await res.text(); let data={}; try{data=JSON.parse(txt);}catch{} if(!res.ok) throw new Error(`HTTP ${res.status} ${txt}`); feeDeliveryEl.textContent=data.fees.delivery.toFixed(2); feeGasEl.textContent=data.fees.gas.toFixed(2); const miles = (typeof data.distance_km==='number') ? (data.distance_km*0.621371) : haversineMiles(shopLatLng.lat,shopLatLng.lng,coords.lat,coords.lng); routeMiEl.textContent=miles.toFixed(2); grandTotalEl.textContent=(getCartTotal()+data.fees.delivery+data.fees.gas).toFixed(2); quoteStatus && (quoteStatus.textContent='Quote updated.'); }catch(e){ console.error('Quote failed',e); quoteStatus && (quoteStatus.textContent='Could not calculate — ' + (e.message||'error')); }});
 document.addEventListener('DOMContentLoaded',()=>{renderCart();initMap();});
+
+
+/* PATCH: keep address list open on selection; use mousedown to avoid input blur */
+(function(){
+  try {
+    const list = document.getElementById('addr-ac');
+    const input = document.getElementById('addr');
+    if (!list || !input) return;
+    list.addEventListener('mousedown', (e) => {
+      const item = e.target.closest('.ac-item');
+      if (!item) return;
+      e.preventDefault();
+      const label = item.textContent.trim();
+      const lat = parseFloat(item.dataset.lat);
+      const lon = parseFloat(item.dataset.lon);
+      if (typeof chooseAddr === 'function') {
+        chooseAddr({ label, lat, lon });
+      } else {
+        // fallback: set fields directly
+        input.value = label;
+      }
+      list.classList.add('hidden');
+    }, true);
+  } catch (e) {}
+})();

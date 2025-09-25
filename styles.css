@@ -25,3 +25,41 @@ input[type=number],select,input[type=text],input[type=tel]{width:100%;padding:.5
 .ac-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:10px;margin-top:.25rem;box-shadow:0 6px 24px rgba(2,6,23,.12);max-height:260px;overflow:auto;z-index:10020}
 .ac-item{padding:.55rem .7rem;cursor:pointer}
 .ac-item:hover,.ac-item.active{background:#f1f5f9}
+
+
+/* === PATCH: left-align helpers for rows if used elsewhere === */
+.product-row, .zyn-strip, .disposable-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+/* === PATCH: Blue buttons for Cart and Add to cart === */
+:root {
+  --brand-blue: #2563eb;
+  --brand-blue-dark: #1e40af;
+}
+
+/* Cart CTA blue */
+#cart-btn.btn,
+.btn.cart-cta {
+  background: var(--brand-blue) !important;
+  color: #fff !important;
+  border-color: var(--brand-blue-dark) !important;
+}
+#cart-btn.btn:hover,
+.btn.cart-cta:hover {
+  background: var(--brand-blue-dark) !important;
+}
+
+/* Add to cart blue */
+.btn.add {
+  background: var(--brand-blue) !important;
+  color: #fff !important;
+  border-color: var(--brand-blue-dark) !important;
+}
+.btn.add:hover { background: var(--brand-blue-dark) !important; }
+
+/* Make primary (checkout) keep its style, leave as-is */
