@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Checkout — Murica1stNicotine</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-control-geocoder/2.4.0/Control.Geocoder.css">
+  <style>#map{height:360px;min-height:320px}</style>
+</head>
+<body>
+  <header class="site-header brand">
+    <div class="brand-mark">
+      <span class="flag">🇺🇸</span>
+      <div class="brand-text">
+        <strong>Murica1stNicotine</strong>
+        <small>Checkout • 21+ Only</small>
+      </div>
+    </div>
+    <nav class="site-nav">
+      <a href="./">Back to store</a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <div class="grid">
+      <section class="card">
+        <h2>Delivery address</h2>
+        <label>Type address (use suggestions) or click the map
+          <div class="ac-wrap">
+            <input type="text" id="addr" autocomplete="off" placeholder="123 Main St, City, State"/>
+            <div id="addr-ac" class="ac-list hidden" role="listbox" aria-label="Address suggestions"></div>
+          </div>
+        </label>
+        <div id="map" class="map" aria-label="Delivery map"></div>
+
+        <div class="row" style="margin-top:.75rem">
+          <button class="btn" id="quote">Get delivery quote</button>
+          <div class="muted" id="quote-status">Enter address or pick on the map.</div>
+        </div>
+
+        <div class="grid" style="margin-top:.75rem">
+          <div class="card"><strong>Distance (route)</strong><br><span id="route-mi">—</span> mi</div>
+          <div class="card"><strong>Delivery fee</strong><br>$<span id="fee-delivery">0.00</span></div>
+          <div class="card"><strong>Gas fee</strong><br>$<span id="fee-gas">0.00</span></div>
+          <div class="card"><strong>Cart + fees total</strong><br>$<span id="grand-total">0.00</span></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Your cart</h2>
+        <div id="cart-items"></div>
+        <div class="row" style="margin-top:.75rem">
+          <div>Total: $<span id="cart-total">0.00</span></div>
+          <button id="place-order" class="btn primary">Place Order (Pay on delivery)</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    window.API_BASE = "https://murica1stnicotine-api.example.workers.dev";
+    window.SHOP_ADDRESS = "30 South Main St, Railroad, PA 17355";
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-control-geocoder/2.4.0/Control.Geocoder.js"></script>
+  <script src="checkout.js"></script>
+</body>
+</html>
