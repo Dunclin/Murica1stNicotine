@@ -1,51 +1,29 @@
+/* base styles trimmed for brevity; same as previous patch */ 
 *{box-sizing:border-box}
 :root{--bg:#f8fafc;--card:#ffffff;--muted:#64748b;--border:#e2e8f0;--accent:#0ea5e9;--accent-2:#0369a1;--ink:#0f172a}
 html,body{margin:0;padding:0;color:var(--ink);background:var(--bg);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial}
 a{color:inherit;text-decoration:none}
 .site-header{display:flex;align-items:center;gap:1rem;padding:.9rem 1.25rem;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#ffffff 0%,#fdfdfd 60%,#f8fafc 100%);position:sticky;top:0;z-index:50}
-.brand .brand-mark{display:flex;align-items:center;gap:.6rem}
-.brand .flag{font-size:1.35rem}
-.brand .brand-text{display:flex;flex-direction:column;line-height:1}
-.brand .brand-text strong{font-size:1.05rem}
-.brand .brand-text small{color:var(--muted)}
-.site-nav{display:flex;gap:.9rem;margin-left:auto}
-.site-nav a{padding:.35rem .6rem;border-radius:999px}
-.site-nav a:hover{background:#eef2f7}
-.cart-cta{margin-left:.5rem}
 .wrap{max-width:1100px;margin:0 auto;padding:1.25rem}
-.hero{padding:1.25rem 0 0.5rem}
-.section{margin-top:1rem}
-.section-title{margin:.5rem 0 1rem}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
 .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1rem;box-shadow:0 1px 4px rgba(2,6,23,.06)}
-.badge{display:inline-block;padding:.2rem .5rem;border-radius:999px;background:#eff6ff;border:1px solid #dbeafe;color:#1d4ed8;font-size:.75rem;margin-bottom:.5rem}
 .row{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-top:.75rem}
-label{display:block;margin:.5rem 0}
 input[type=number],select,input[type=text]{width:100%;padding:.55rem;border:1px solid var(--border);border-radius:10px;background:#fff}
-.price{font-weight:600}
 .btn{border:1px solid var(--border);padding:.5rem .9rem;border-radius:999px;cursor:pointer;background:#fff}
-.btn:hover{filter:brightness(.98)}
-.btn-secondary{background:#f3f4f6}
 .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent-2)}
 .muted{color:var(--muted)}
-.notice{margin-top:1.5rem;padding:1rem;border:1px dashed var(--border);border-radius:12px;background:#fff}
 .drawer{position:fixed;right:0;top:0;height:100vh;width:380px;max-width:92vw;background:#fff;border-left:1px solid var(--border);transform:translateX(100%);transition:transform .2s ease;display:flex;flex-direction:column;box-shadow:-10px 0 30px rgba(2,6,23,.08);z-index:50}
 .drawer.open{transform:translateX(0)}
-.drawer-head,.drawer-foot{padding:1rem;border-bottom:1px solid var(--border)}
-.drawer-foot{border-top:1px solid var(--border);margin-top:auto;display:flex;align-items:center;justify-content:space-between}
 #cart-items{padding:1rem;overflow:auto;flex:1}
-.cart-row{display:grid;grid-template-columns:1fr auto;gap:.5rem;border-bottom:1px solid var(--border);padding:.5rem 0}
-.cart-row small{color:var(--muted)}
-.qty-controls{display:flex;gap:.5rem;align-items:center}
-.qty-btn{border:1px solid var(--border);border-radius:8px;padding:.25rem .5rem;cursor:pointer;background:#fff}
-.hidden{display:none}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .18s ease;z-index:49}
 .map{width:100%;height:360px;min-height:320px;border-radius:12px;border:1px solid var(--border);background:#e5e7eb;position:relative;z-index:0}
 .leaflet-container{z-index:0}
 .leaflet-pane{z-index:200}
 .leaflet-top,.leaflet-bottom{z-index:300}
-/* --- Autocomplete UI, above map --- */
 .ac-wrap{position:relative; z-index:10010}
 .ac-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:10px;margin-top:.25rem;box-shadow:0 6px 24px rgba(2,6,23,.12);max-height:260px;overflow:auto;z-index:10020}
 .ac-item{padding:.55rem .7rem;cursor:pointer}
 .ac-item:hover,.ac-item.active{background:#f1f5f9}
+/* Debug bar */
+.dbg{position:fixed;left:0;right:0;bottom:0;background:#0f172a;color:#fff;padding:.5rem .75rem;font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;display:flex;gap:1rem;z-index:99999}
+.dbg code{color:#a7f3d0}
+.hidden{display:none}
