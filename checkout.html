@@ -35,10 +35,12 @@
           </div>
         </label>
         <div id="map" class="map" aria-label="Delivery map"></div>
+
         <div class="row" style="margin-top:.75rem">
           <button class="btn" id="quote">Get delivery quote</button>
           <div class="muted" id="quote-status">Enter address or pick on the map.</div>
         </div>
+
         <div class="grid" style="margin-top:.75rem">
           <div class="card"><strong>Distance (route)</strong><br><span id="route-mi">—</span> mi</div>
           <div class="card"><strong>Delivery fee</strong><br>$<span id="fee-delivery">0.00</span></div>
@@ -58,19 +60,14 @@
     </div>
   </main>
 
-  <div id="debugbar" class="hidden dbg">
-    <div><strong>API_BASE:</strong> <code id="dbg-api"></code></div>
-    <div><strong>/health:</strong> <span id="dbg-health">—</span></div>
-    <div><strong>Test quote:</strong> <span id="dbg-quote">—</span></div>
-  </div>
-
   <script>
-    window.API_BASE = "https://green-flower-648b.dunclin.workers.dev"; /* set to your Worker */
+    window.API_BASE = "https://green-flower-648b.dunclin.workers.dev";
     window.SHOP_ADDRESS = "30 South Main St, Railroad, PA 17355";
   </script>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-control-geocoder/2.4.0/Control.Geocoder.js"></script>
-  <script src="checkout.js"></script>
+  <script src="checkout.js?v=1"></script>
 </body>
 </html>

@@ -11,6 +11,18 @@
   <style>#map{height:360px;min-height:320px}</style>
 </head>
 <body>
+  <div id="age-gate" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="age-title">
+    <div class="modal-card">
+      <h2 id="age-title">Are you 21 or older?</h2>
+      <p>You must be 21+ to enter and purchase nicotine products.</p>
+      <div class="row">
+        <button id="age-yes" class="btn">Yes, I am 21+</button>
+        <button id="age-no" class="btn btn-secondary">No</button>
+      </div>
+      <p class="fineprint">We verify age at delivery. ID may be required.</p>
+    </div>
+  </div>
+
   <header class="site-header brand">
     <div class="brand-mark">
       <span class="flag">🇺🇸</span>
@@ -38,7 +50,7 @@
       <p class="muted">Pay on delivery. Age verification required.</p>
     </section>
 
-    <!-- Products omitted for brevity; same as before. -->
+    <!-- ZYN PRODUCTS -->
     <section id="zyn" class="section">
       <h2 class="section-title">ZYN Nicotine Pouches</h2>
       <div class="grid">
@@ -56,11 +68,12 @@
           <label>Quantity
             <input type="number" min="1" value="1" class="qty" data-sku="ZYN-3MG"/>
           </label>
-          <div class="row">
+          <div class="row actions">
             <div class="price">$4.99 / can</div>
             <button class="btn add" data-sku="ZYN-3MG" data-name="ZYN 3mg" data-price="4.99">Add to cart</button>
           </div>
         </article>
+
         <article class="card">
           <div class="badge">6 mg</div>
           <h3>ZYN 6mg</h3>
@@ -75,7 +88,7 @@
           <label>Quantity
             <input type="number" min="1" value="1" class="qty" data-sku="ZYN-6MG"/>
           </label>
-          <div class="row">
+          <div class="row actions">
             <div class="price">$4.99 / can</div>
             <button class="btn add" data-sku="ZYN-6MG" data-name="ZYN 6mg" data-price="4.99">Add to cart</button>
           </div>
@@ -83,6 +96,7 @@
       </div>
     </section>
 
+    <!-- DISPOSABLE VAPES -->
     <section id="disposables" class="section">
       <h2 class="section-title">Disposable Vapes</h2>
       <div class="grid">
@@ -102,7 +116,7 @@
           <label>Quantity
             <input type="number" min="1" value="1" class="qty" data-sku="DISP-5K"/>
           </label>
-          <div class="row">
+          <div class="row actions">
             <div class="price">$14.99</div>
             <button class="btn add" data-sku="DISP-5K" data-name="Murica 5K Disposable" data-price="14.99">Add to cart</button>
           </div>
@@ -124,9 +138,53 @@
           <label>Quantity
             <input type="number" min="1" value="1" class="qty" data-sku="DISP-10K"/>
           </label>
-          <div class="row">
+          <div class="row actions">
             <div class="price">$18.99</div>
             <button class="btn add" data-sku="DISP-10K" data-name="Murica 10K Disposable" data-price="18.99">Add to cart</button>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="badge">20,000 puffs</div>
+          <h3>Murica 20K Disposable</h3>
+          <p class="muted">Massive battery, USB-C charging</p>
+          <label>Flavor
+            <select data-sku="DISP-20K" class="flavor">
+              <option value="blue-razz-ice">Blue Razz Ice</option>
+              <option value="strawberry-watermelon">Strawberry Watermelon</option>
+              <option value="peach-ice">Peach Ice</option>
+              <option value="grape">Grape</option>
+              <option value="menthol">Menthol</option>
+            </select>
+          </label>
+          <label>Quantity
+            <input type="number" min="1" value="1" class="qty" data-sku="DISP-20K"/>
+          </label>
+          <div class="row actions">
+            <div class="price">$24.99</div>
+            <button class="btn add" data-sku="DISP-20K" data-name="Murica 20K Disposable" data-price="24.99">Add to cart</button>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="badge">25,000 puffs</div>
+          <h3>Murica 25K Disposable</h3>
+          <p class="muted">Long-haul performance & bold flavor</p>
+          <label>Flavor
+            <select data-sku="DISP-25K" class="flavor">
+              <option value="blue-razz-ice">Blue Razz Ice</option>
+              <option value="strawberry-watermelon">Strawberry Watermelon</option>
+              <option value="peach-ice">Peach Ice</option>
+              <option value="grape">Grape</option>
+              <option value="menthol">Menthol</option>
+            </select>
+          </label>
+          <label>Quantity
+            <input type="number" min="1" value="1" class="qty" data-sku="DISP-25K"/>
+          </label>
+          <div class="row actions">
+            <div class="price">$29.99</div>
+            <button class="btn add" data-sku="DISP-25K" data-name="Murica 25K Disposable" data-price="29.99">Add to cart</button>
           </div>
         </article>
       </div>
@@ -141,11 +199,14 @@
             <div id="addr-ac" class="ac-list hidden" role="listbox" aria-label="Address suggestions"></div>
           </div>
         </label>
+
         <div id="map" class="map" aria-label="Delivery map"></div>
+
         <div class="row" style="margin-top:.75rem">
           <button class="btn" id="quote">Get delivery quote</button>
           <div class="muted" id="quote-status">Use the search on the map or enter a full address.</div>
         </div>
+
         <div class="grid" style="margin-top:.75rem">
           <div class="card"><strong>Distance (route)</strong><br><span id="route-mi">—</span> mi</div>
           <div class="card"><strong>Delivery fee</strong><br>$<span id="fee-delivery">0.00</span></div>
@@ -172,20 +233,13 @@
     </div>
   </div>
 
-  <!-- Debug bar (only shows if URL ends with #debug) -->
-  <div id="debugbar" class="hidden dbg">
-    <div><strong>API_BASE:</strong> <code id="dbg-api"></code></div>
-    <div><strong>/health:</strong> <span id="dbg-health">—</span></div>
-    <div><strong>Test quote:</strong> <span id="dbg-quote">—</span></div>
-  </div>
-
   <script>
-    window.API_BASE = "https://green-flower-648b.dunclin.workers.dev"; /* set to your Worker */
+    window.API_BASE = "https://green-flower-648b.dunclin.workers.dev";
     window.SHOP_ADDRESS = "30 South Main St, Railroad, PA 17355";
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-control-geocoder/2.4.0/Control.Geocoder.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=1"></script>
 </body>
 </html>
