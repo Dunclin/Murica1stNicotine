@@ -1,1 +1,245 @@
-<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Murica1stNicotine</title><link rel='stylesheet' href='styles.css'><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css'><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.css'><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/leaflet-control-geocoder/2.4.0/Control.Geocoder.css'><style>#map{height:360px;min-height:320px}</style></head><body><header class='site-header brand'><div class='brand-mark'><span class='flag'>🇺🇸</span><div class='brand-text'><strong>Murica1stNicotine</strong><small>Premium Nicotine — 21+ Only</small></div></div><nav class='site-nav'><a href='#zyn'>ZYN</a><a href='#disposables'>Disposables</a><a href='#delivery'>Delivery</a><a href='#info'>Info</a></nav><button id='cart-btn' class='btn cart-cta' aria-haspopup='dialog' aria-controls='cart-drawer'>Cart (<span id='cart-count'>0</span>)</button></header><main class='wrap'><section id='delivery' class='section'><h2 class='section-title'>Delivery Details</h2><div class='card'><label>Delivery address<input type='text' id='addr' placeholder='123 Main St, City, State'/></label><div id='map' class='map'></div><div class='row'><button class='btn' id='quote'>Get delivery quote</button><div class='muted' id='quote-status'>Use the search on the map or enter a full address.</div></div><div class='grid'><div class='card'><strong>Distance (route)</strong><br><span id='route-mi'>—</span> mi</div><div class='card'><strong>Delivery fee</strong><br>$<span id='fee-delivery'>0.00</span></div><div class='card'><strong>Gas fee</strong><br>$<span id='fee-gas'>0.00</span></div><div class='card'><strong>Cart + fees total</strong><br>$<span id='grand-total'>0.00</span></div></div></div></section></main><div id='cart-drawer' class='drawer hidden' role='dialog' aria-labelledby='cart-title' aria-modal='true'><div class='drawer-head'><h3 id='cart-title'>Your Cart</h3><button id='close-cart' class='btn btn-secondary' aria-label='Close Cart'>Close</button></div><div id='cart-items'></div><div class='drawer-foot'><div>Total: $<span id='cart-total'>0.00</span></div><button id='checkout' class='btn primary'>Place Order (Pay on delivery)</button></div></div><script>window.API_BASE='http://localhost:8080';window.SHOP_ADDRESS='30 South Main St, Railroad, PA 17355';</script><script src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'></script><script src='https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.js'></script><script src='https://cdnjs.cloudflare.com/ajax/libs/leaflet-control-geocoder/2.4.0/Control.Geocoder.js'></script><script src='app.js'></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Murica1stNicotine — ZYN + Disposables (Delivery)</title>
+
+  <link rel="stylesheet" href="styles.css"/>
+  <!-- Leaflet + Routing + Geocoder -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-control-geocoder/2.4.0/Control.Geocoder.css">
+  <style>#map{height:360px;min-height:320px}</style>
+</head>
+<body>
+  <div id="age-gate" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="age-title">
+    <div class="modal-card">
+      <h2 id="age-title">Are you 21 or older?</h2>
+      <p>You must be 21+ to enter and purchase nicotine products.</p>
+      <div class="row">
+        <button id="age-yes" class="btn">Yes, I am 21+</button>
+        <button id="age-no" class="btn btn-secondary">No</button>
+      </div>
+      <p class="fineprint">We verify age at delivery. ID may be required.</p>
+    </div>
+  </div>
+
+  <header class="site-header brand">
+    <div class="brand-mark">
+      <span class="flag">🇺🇸</span>
+      <div class="brand-text">
+        <strong>Murica1stNicotine</strong>
+        <small>Premium Nicotine — 21+ Only</small>
+      </div>
+    </div>
+    <nav class="site-nav">
+      <a href="#zyn">ZYN</a>
+      <a href="#disposables">Disposables</a>
+      <a href="#delivery">Delivery</a>
+      <a href="#info">Info</a>
+    </nav>
+    <button id="cart-btn" class="btn cart-cta" aria-haspopup="dialog" aria-controls="cart-drawer">
+      Cart (<span id="cart-count">0</span>)
+    </button>
+  </header>
+
+  <div id="cart-overlay" class="overlay hidden" aria-hidden="true"></div>
+
+  <main class="wrap">
+    <section class="hero">
+      <h1>Quality. Compliant. Fast.</h1>
+      <p class="muted">Pay on delivery. Age verification required.</p>
+    </section>
+
+    <!-- ZYN PRODUCTS (RESTORED) -->
+    <section id="zyn" class="section">
+      <h2 class="section-title">ZYN Nicotine Pouches</h2>
+      <div class="grid">
+        <article class="card">
+          <div class="badge">3 mg</div>
+          <h3>ZYN 3mg</h3>
+          <p class="muted">Smooth 3mg pouches</p>
+          <label>Flavor
+            <select data-sku="ZYN-3MG" class="flavor">
+              <option value="mint">Mint</option>
+              <option value="wintergreen">Wintergreen</option>
+              <option value="coffee">Coffee</option>
+            </select>
+          </label>
+          <label>Quantity
+            <input type="number" min="1" value="1" class="qty" data-sku="ZYN-3MG"/>
+          </label>
+          <div class="row">
+            <div class="price">$4.99 / can</div>
+            <button class="btn add" data-sku="ZYN-3MG" data-name="ZYN 3mg" data-price="4.99">Add to cart</button>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="badge">6 mg</div>
+          <h3>ZYN 6mg</h3>
+          <p class="muted">Bold 6mg pouches</p>
+          <label>Flavor
+            <select data-sku="ZYN-6MG" class="flavor">
+              <option value="cool-mint">Cool Mint</option>
+              <option value="spearmint">Spearmint</option>
+              <option value="citrus">Citrus</option>
+            </select>
+          </label>
+          <label>Quantity
+            <input type="number" min="1" value="1" class="qty" data-sku="ZYN-6MG"/>
+          </label>
+          <div class="row">
+            <div class="price">$4.99 / can</div>
+            <button class="btn add" data-sku="ZYN-6MG" data-name="ZYN 6mg" data-price="4.99">Add to cart</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- DISPOSABLE VAPES (RESTORED) -->
+    <section id="disposables" class="section">
+      <h2 class="section-title">Disposable Vapes</h2>
+      <div class="grid">
+        <article class="card">
+          <div class="badge">5,000 puffs</div>
+          <h3>Murica 5K Disposable</h3>
+          <p class="muted">Compact, rechargeable disposable</p>
+          <label>Flavor
+            <select data-sku="DISP-5K" class="flavor">
+              <option value="blue-razz-ice">Blue Razz Ice</option>
+              <option value="strawberry-watermelon">Strawberry Watermelon</option>
+              <option value="peach-ice">Peach Ice</option>
+              <option value="grape">Grape</option>
+              <option value="menthol">Menthol</option>
+            </select>
+          </label>
+          <label>Quantity
+            <input type="number" min="1" value="1" class="qty" data-sku="DISP-5K"/>
+          </label>
+          <div class="row">
+            <div class="price">$14.99</div>
+            <button class="btn add" data-sku="DISP-5K" data-name="Murica 5K Disposable" data-price="14.99">Add to cart</button>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="badge">10,000 puffs</div>
+          <h3>Murica 10K Disposable</h3>
+          <p class="muted">High-capacity with mesh coil</p>
+          <label>Flavor
+            <select data-sku="DISP-10K" class="flavor">
+              <option value="blue-razz-ice">Blue Razz Ice</option>
+              <option value="strawberry-watermelon">Strawberry Watermelon</option>
+              <option value="peach-ice">Peach Ice</option>
+              <option value="grape">Grape</option>
+              <option value="menthol">Menthol</option>
+            </select>
+          </label>
+          <label>Quantity
+            <input type="number" min="1" value="1" class="qty" data-sku="DISP-10K"/>
+          </label>
+          <div class="row">
+            <div class="price">$18.99</div>
+            <button class="btn add" data-sku="DISP-10K" data-name="Murica 10K Disposable" data-price="18.99">Add to cart</button>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="badge">20,000 puffs</div>
+          <h3>Murica 20K Disposable</h3>
+          <p class="muted">Massive battery, USB-C charging</p>
+          <label>Flavor
+            <select data-sku="DISP-20K" class="flavor">
+              <option value="blue-razz-ice">Blue Razz Ice</option>
+              <option value="strawberry-watermelon">Strawberry Watermelon</option>
+              <option value="peach-ice">Peach Ice</option>
+              <option value="grape">Grape</option>
+              <option value="menthol">Menthol</option>
+            </select>
+          </label>
+          <label>Quantity
+            <input type="number" min="1" value="1" class="qty" data-sku="DISP-20K"/>
+          </label>
+          <div class="row">
+            <div class="price">$24.99</div>
+            <button class="btn add" data-sku="DISP-20K" data-name="Murica 20K Disposable" data-price="24.99">Add to cart</button>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="badge">25,000 puffs</div>
+          <h3>Murica 25K Disposable</h3>
+          <p class="muted">Long-haul performance & bold flavor</p>
+          <label>Flavor
+            <select data-sku="DISP-25K" class="flavor">
+              <option value="blue-razz-ice">Blue Razz Ice</option>
+              <option value="strawberry-watermelon">Strawberry Watermelon</option>
+              <option value="peach-ice">Peach Ice</option>
+              <option value="grape">Grape</option>
+              <option value="menthol">Menthol</option>
+            </select>
+          </label>
+          <label>Quantity
+            <input type="number" min="1" value="1" class="qty" data-sku="DISP-25K"/>
+          </label>
+          <div class="row">
+            <div class="price">$29.99</div>
+            <button class="btn add" data-sku="DISP-25K" data-name="Murica 25K Disposable" data-price="29.99">Add to cart</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="delivery" class="section">
+      <h2 class="section-title">Delivery Details</h2>
+      <div class="card">
+        <label>Delivery address (type or search on the map)
+          <input type="text" id="addr" placeholder="Start typing: 123 Main St, City, State"/>
+        </label>
+
+        <div id="map" class="map" aria-label="Delivery map"></div>
+
+        <div class="row" style="margin-top:.75rem">
+          <button class="btn" id="quote">Get delivery quote</button>
+          <div class="muted" id="quote-status">Use the search on the map or enter a full address.</div>
+        </div>
+
+        <div class="grid" style="margin-top:.75rem">
+          <div class="card"><strong>Distance (route)</strong><br><span id="route-mi">—</span> mi</div>
+          <div class="card"><strong>Delivery fee</strong><br>$<span id="fee-delivery">0.00</span></div>
+          <div class="card"><strong>Gas fee</strong><br>$<span id="fee-gas">0.00</span></div>
+          <div class="card"><strong>Cart + fees total</strong><br>$<span id="grand-total">0.00</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="info" class="notice">
+      <strong>⚠️ Legal & Safety:</strong> Nicotine is an addictive chemical. 21+ only. Orders are paid <strong>at delivery</strong>. Comply with all laws and age verification.
+    </section>
+  </main>
+
+  <div id="cart-drawer" class="drawer hidden" role="dialog" aria-labelledby="cart-title" aria-modal="true">
+    <div class="drawer-head">
+      <h3 id="cart-title">Your Cart</h3>
+      <button id="close-cart" class="btn btn-secondary" aria-label="Close Cart">Close</button>
+    </div>
+    <div id="cart-items"></div>
+    <div class="drawer-foot">
+      <div>Total: $<span id="cart-total">0.00</span></div>
+      <button id="checkout" class="btn primary">Place Order (Pay on delivery)</button>
+    </div>
+  </div>
+
+  <script>
+    window.API_BASE = "http://localhost:8080";  /* change to your deployed server URL */
+    window.SHOP_ADDRESS = "30 South Main St, Railroad, PA 17355";
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-control-geocoder/2.4.0/Control.Geocoder.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

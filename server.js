@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const https = require('https');
 const cors = require('cors');
+const { Expo } = require('expo-server-sdk');
 const fetchFn = global.fetch || ((...a) => import('node-fetch').then(({default: f}) => f(...a)));
 
 const app = express();
@@ -19,6 +20,7 @@ const {
   DISCORD_WEBHOOK_URL = ''
 } = process.env;
 
+// ---- Discord webhook notify ----
 async function notifyDiscord({ orderId, total, address, distance_km }) {
   if (!DISCORD_WEBHOOK_URL) return;
   const content =
@@ -38,6 +40,32 @@ async function notifyDiscord({ orderId, total, address, distance_km }) {
   }
 }
 
+// ---- Optional Expo push remains available ----
+let expo = new Expo();
+const deviceTokens = new Set();
+app.post('/api/register-device', (req, res) => {
+  const token = req.body?.token;
+  if (!token || !Expo.isExpoPushToken(token)) {
+    return res.status(400).json({ error: 'Invalid Expo push token' });
+  }
+  deviceTokens.add(token);
+  console.log('[DEVICE REGISTERED]', token);
+  res.json({ ok: true });
+});
+async function notifyDriversExpo(title, body, data){
+  if (!deviceTokens.size) return;
+  const messages = [];
+  for (const token of deviceTokens) {
+    messages.push({ to: token, sound: 'default', title, body, data });
+  }
+  const chunks = expo.chunkPushNotifications(messages);
+  for (const chunk of chunks) {
+    try { await expo.sendPushNotificationsAsync(chunk); }
+    catch (e) { console.error('Expo push error', e); }
+  }
+}
+
+// ---- Utilities ----
 function haversineKm(lat1, lon1, lat2, lon2){
   const toRad = d => d * Math.PI / 180;
   const R = 6371;
@@ -46,6 +74,7 @@ function haversineKm(lat1, lon1, lat2, lon2){
   const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
+
 function geocodeNominatim(address){
   return new Promise((resolve, reject) => {
     if (!address) return reject(new Error('No address'));
@@ -65,6 +94,7 @@ function geocodeNominatim(address){
     req.on('error', reject);
   });
 }
+
 function calcFees(distanceKm){
   const baseFee = parseFloat(DELIVERY_BASE_FEE);
   const baseRadius = parseFloat(DELIVERY_BASE_RADIUS_KM);
@@ -76,6 +106,7 @@ function calcFees(distanceKm){
   return { delivery: round(delivery), gas: round(gas) };
 }
 
+// ---- Routes ----
 app.get('/health', (_req,res)=>res.send('ok'));
 
 app.post('/api/quote', async (req, res) => {
@@ -129,7 +160,10 @@ app.post('/api/order', async (req, res) => {
     const orderId = 'ORD-' + Date.now().toString(36).toUpperCase();
     console.log('[NEW ORDER]', { orderId, address, coords: dest, cart, fees, total });
 
+    // Notify Discord
     await notifyDiscord({ orderId, total, address, distance_km });
+    // Optional Expo push
+    await notifyDriversExpo('New Delivery Order', `Total $${total.toFixed(2)}`, { orderId, total, address, distance_km, when: Date.now() });
 
     return res.json({ orderId, total, fees, distance_km });
   } catch (e) {
