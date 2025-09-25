@@ -6,25 +6,12 @@
   <title>Murica1stNicotine — ZYN + Disposables (Delivery)</title>
 
   <link rel="stylesheet" href="styles.css"/>
-  <!-- Leaflet + Routing + Geocoder -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-control-geocoder/2.4.0/Control.Geocoder.css">
   <style>#map{height:360px;min-height:320px}</style>
 </head>
 <body>
-  <div id="age-gate" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="age-title">
-    <div class="modal-card">
-      <h2 id="age-title">Are you 21 or older?</h2>
-      <p>You must be 21+ to enter and purchase nicotine products.</p>
-      <div class="row">
-        <button id="age-yes" class="btn">Yes, I am 21+</button>
-        <button id="age-no" class="btn btn-secondary">No</button>
-      </div>
-      <p class="fineprint">We verify age at delivery. ID may be required.</p>
-    </div>
-  </div>
-
   <header class="site-header brand">
     <div class="brand-mark">
       <span class="flag">🇺🇸</span>
@@ -52,7 +39,6 @@
       <p class="muted">Pay on delivery. Age verification required.</p>
     </section>
 
-    <!-- ZYN PRODUCTS -->
     <section id="zyn" class="section">
       <h2 class="section-title">ZYN Nicotine Pouches</h2>
       <div class="grid">
@@ -98,7 +84,6 @@
       </div>
     </section>
 
-    <!-- DISPOSABLE VAPES -->
     <section id="disposables" class="section">
       <h2 class="section-title">Disposable Vapes</h2>
       <div class="grid">
@@ -236,7 +221,7 @@
   </div>
 
   <script>
-    window.API_BASE = "green-flower-648b.dunclin.workers.dev";
+    window.API_BASE = "https://YOUR-WORKER-NAME.YOUR-SUBDOMAIN.workers.dev"; /* <-- set me */
     window.SHOP_ADDRESS = "30 South Main St, Railroad, PA 17355";
   </script>
 
