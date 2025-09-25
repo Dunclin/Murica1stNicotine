@@ -48,3 +48,36 @@ document.addEventListener('DOMContentLoaded',initMap);
     }, true);
   } catch (e) {}
 })();
+
+
+// === Delivery ONLINE/OFFLINE status banner ===
+(async () => {
+  try {
+    const res = await fetch(`${window.API_BASE}/api/status`, { cache: "no-store" });
+    const data = await res.json();
+    const status = (data?.status || "online").toLowerCase();
+
+    let b = document.getElementById("status-banner");
+    if (!b) {
+      b = document.createElement("div");
+      b.id = "status-banner";
+      b.style.cssText = "margin:.5rem 0;padding:.5rem .75rem;border-radius:8px;border:1px solid #e2e8f0;";
+      (document.querySelector(".wrap") || document.body).prepend(b);
+    }
+
+    if (status === "offline") {
+      b.textContent = "Deliveries are currently OFFLINE.";
+      b.style.background = "#fff7ed";
+      b.style.borderColor = "#fdba74";
+      document.querySelectorAll(".btn.add, #checkout-link, #checkoutButton, #place-order").forEach(el => {
+        el?.setAttribute("disabled", "true");
+        el?.classList.add("disabled");
+        el?.style && (el.style.opacity = "0.6", el.style.cursor = "not-allowed");
+      });
+    } else {
+      b.textContent = "Deliveries are ONLINE.";
+      b.style.background = "#ecfeff";
+      b.style.borderColor = "#67e8f9";
+    }
+  } catch (e) { /* ignore */ }
+})();
