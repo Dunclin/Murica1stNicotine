@@ -1,47 +1,26 @@
-async function submitOrder() {
-  const addressEl = document.getElementById('addressInput');
-  const phoneEl = document.getElementById('phone');
+const CART_KEY='zyn_cart_v1';
+function getCart(){return JSON.parse(localStorage.getItem(CART_KEY)||'[]');}
+const cartItemsEl=document.getElementById('cart-items');const cartTotalEl=document.getElementById('cart-total');
+function renderCart(){const cart=getCart();let t=0;cartItemsEl.innerHTML='';cart.forEach(i=>{t+=i.price*i.qty;const row=document.createElement('div');row.className='cart-row';row.innerHTML=`<div><strong>${i.name}</strong> <small>(${i.flavor})</small></div><div>x ${i.qty} — $${(i.price*i.qty).toFixed(2)}</div>`;cartItemsEl.appendChild(row);});cartTotalEl.textContent=t.toFixed(2);}renderCart();
 
-  const address = addressEl?.value?.trim() || '';
-  const phone = phoneEl?.value?.trim() || '';
-  const lat = Number(addressEl?.dataset?.lat);
-  const lng = Number(addressEl?.dataset?.lng);
-
-  const cart = (function readCart() {
-    try { return JSON.parse(localStorage.getItem('cart') || '[]'); } catch { return []; }
-  })();
-
-  if (!cart.length) {
-    alert('Your cart is empty.');
-    return;
-  }
-  if (!address) {
-    alert('Please enter your delivery address.');
-    return;
-  }
-
-  const payload = { address, phone, cart };
-  if (Number.isFinite(lat) && Number.isFinite(lng)) {
-    payload.lat = lat;
-    payload.lng = lng;
-  }
-
-  try {
-    const res = await fetch('/api/order', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || 'Order failed');
-    }
-    alert(`Order placed! ID: ${data.orderId}\nTotal: $${data.total}`);
-    // Optionally clear cart
-    localStorage.removeItem('cart');
-  } catch (e) {
-    alert('Failed to place order: ' + e.message);
-  }
+function haversineMiles(lat1, lon1, lat2, lon2){
+  const toRad = d => d*Math.PI/180, R=6371; // km
+  const dLat = toRad(lat2-lat1), dLon = toRad(lon2-lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  const km = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return km * 0.621371;
 }
 
-document.getElementById('checkoutButton')?.addEventListener('click', submitOrder);
+const addrInput=document.getElementById('addr');const acList=document.getElementById('addr-ac');const quoteBtn=document.getElementById('quote');const quoteStatus=document.getElementById('quote-status');const feeDeliveryEl=document.getElementById('fee-delivery');const feeGasEl=document.getElementById('fee-gas');const grandTotalEl=document.getElementById('grand-total');const routeMiEl=document.getElementById('route-mi');let lMap,lRouter,shopLatLng=null,destLatLng=null,lastQuote=null;
+function debounce(fn,ms=250){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
+function getCartTotal(){return getCart().reduce((s,i)=>s+i.price*i.qty,0);}
+function updateGrandTotal(){const fees=(lastQuote?.fees?.delivery||0)+(lastQuote?.fees?.gas||0);grandTotalEl.textContent=(getCartTotal()+fees).toFixed(2);}
+function initMap(){const fb={lat:39.7597,lng:-76.6760};lMap=L.map('map').setView([fb.lat,fb.lng],12);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap'}).addTo(lMap);const provider=L.Control.Geocoder.nominatim();const shop=window.SHOP_ADDRESS||'30 South Main St, Railroad, PA 17355';provider.geocode(shop,(r)=>{const c=r?.[0]?.center||fb;shopLatLng={lat:c.lat,lng:c.lng};L.marker([c.lat,c.lng],{title:'Shop'}).addTo(lMap);lMap.setView([c.lat,c.lng],13);});const gc=L.Control.geocoder({defaultMarkGeocode:false}).addTo(lMap);gc.on('markgeocode',e=>chooseAddr({label:e.geocode.name,lat:e.geocode.center.lat,lon:e.geocode.center.lng}));lMap.on('click',e=>chooseAddr({label:`${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`,lat:e.latlng.lat,lon:e.latlng.lng}));}
+function drawRoute(){if(!shopLatLng||!destLatLng)return;if(lRouter){lMap.removeControl(lRouter);lRouter=null;}lRouter=L.Routing.control({waypoints:[L.latLng(shopLatLng.lat,shopLatLng.lng),L.latLng(destLatLng.lat,destLatLng.lng)],router:L.Routing.osrmv1({serviceUrl:'https://router.project-osrm.org/route/v1'}),addWaypoints:false,draggableWaypoints:false,show:false,fitSelectedRoutes:true}).on('routesfound',e=>{routeMiEl.textContent=(e.routes[0].summary.totalDistance/1609.344).toFixed(2);}).addTo(lMap);}
+const fetchSug=debounce(async(q)=>{if(!q||q.length<2){acList.innerHTML='';acList.classList.add('hidden');return;}const url=`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8&countrycodes=us&q=${encodeURIComponent(q)}`;try{const r=await fetch(url,{headers:{'User-Agent':'murica1stnicotine/1.0 (contact: merchant@example.com)'}});const j=await r.json();acList.innerHTML=j.map(d=>`<div class="ac-item" data-lat="${d.lat}" data-lon="${d.lon}">${d.display_name}</div>`).join('');acList.classList.remove('hidden');}catch{acList.innerHTML='';acList.classList.add('hidden');}},250);
+function chooseAddr({label,lat,lon}){addrInput.value=label;destLatLng={lat,lng:lon};L.marker([lat,lon]).addTo(lMap);drawRoute();acList.innerHTML='';acList.classList.add('hidden');quoteStatus.textContent='Click "Get delivery quote" to compute fees.';}
+addrInput?.addEventListener('input',e=>fetchSug(e.target.value));document.addEventListener('click',e=>{if(e.target.classList.contains('ac-item')){chooseAddr({label:e.target.textContent,lat:parseFloat(e.target.dataset.lat),lon:parseFloat(e.target.dataset.lon)});}else if(!document.querySelector('.ac-wrap')?.contains(e.target)){acList.classList.add('hidden');}});
+async function ensureCoords(address){ if (destLatLng && typeof destLatLng.lat==='number' && typeof destLatLng.lng==='number'){ return destLatLng; } if (!address) throw new Error('No address'); const url=`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`; const r=await fetch(url,{headers:{'User-Agent':'murica1stnicotine/1.0 (contact: merchant@example.com)'}}); const j=await r.json(); if(!Array.isArray(j)||!j.length) throw new Error('Address not found'); destLatLng={lat:parseFloat(j[0].lat),lng:parseFloat(j[0].lon)}; L.marker([destLatLng.lat,destLatLng.lng]).addTo(lMap); drawRoute(); return destLatLng; }
+quoteBtn?.addEventListener('click',async()=>{const address=(addrInput?.value||'').trim(); quoteStatus.textContent='Calculating…'; try{ const coords=await ensureCoords(address); const res=await fetch(`${window.API_BASE}/api/quote`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address,lat:coords.lat,lng:coords.lng})}); const txt=await res.text(); let data={}; try{data=JSON.parse(txt);}catch{} if(!res.ok) throw new Error(`HTTP ${res.status} ${txt}`); lastQuote=data; feeDeliveryEl.textContent=data.fees.delivery.toFixed(2); feeGasEl.textContent=data.fees.gas.toFixed(2); const miles = (typeof data.distance_km==='number') ? (data.distance_km*0.621371) : haversineMiles(shopLatLng.lat,shopLatLng.lng,coords.lat,coords.lng); routeMiEl.textContent=miles.toFixed(2); updateGrandTotal(); quoteStatus.textContent='Quote updated.'; }catch(e){ console.error(e); quoteStatus.textContent='Could not calculate — ' + (e.message||'error'); }});
+document.getElementById('place-order')?.addEventListener('click',async()=>{const cart=getCart();if(!cart.length)return alert('Your cart is empty.');const address=(addrInput?.value||'').trim();const phone=(document.getElementById('phone')?.value||'').trim();if(!phone)return alert('Please enter a phone number for the driver.'); try{ const coords=await ensureCoords(address); const res=await fetch(`${window.API_BASE}/api/order`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address,lat:coords.lat,lng:coords.lng,phone,cart})}); const txt=await res.text(); if(!res.ok) throw new Error(`HTTP ${res.status} ${txt}`); const data=JSON.parse(txt); localStorage.removeItem(CART_KEY); window.location.href=`success.html?orderId=${encodeURIComponent(data.orderId)}&total=${encodeURIComponent(data.total.toFixed(2))}`; }catch(e){ alert('Could not place order — ' + (e.message||'error')); }});
+document.addEventListener('DOMContentLoaded',initMap);
