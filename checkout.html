@@ -27,8 +27,11 @@
   <main class="wrap">
     <div class="grid">
       <section class="card">
-        <h2>Delivery address</h2>
-        <label>Type address (use suggestions) or click the map
+        <h2>Delivery details</h2>
+        <label>Phone number (for the driver)
+          <input type="tel" id="phone" placeholder="(555) 555-5555" autocomplete="tel" inputmode="tel"/>
+        </label>
+        <label>Delivery address (type or pick on map)
           <div class="ac-wrap">
             <input type="text" id="addr" autocomplete="off" placeholder="123 Main St, City, State"/>
             <div id="addr-ac" class="ac-list hidden" role="listbox" aria-label="Address suggestions"></div>
@@ -38,11 +41,11 @@
 
         <div class="row" style="margin-top:.75rem">
           <button class="btn" id="quote">Get delivery quote</button>
-          <div class="muted" id="quote-status">Enter address or pick on the map.</div>
+          <div class="muted" id="quote-status">Enter address or click the map.</div>
         </div>
 
         <div class="grid" style="margin-top:.75rem">
-          <div class="card"><strong>Distance (route)</strong><br><span id="route-mi">—</span> mi</div>
+          <div class="card"><strong>Distance</strong><br><span id="route-mi">—</span> mi</div>
           <div class="card"><strong>Delivery fee</strong><br>$<span id="fee-delivery">0.00</span></div>
           <div class="card"><strong>Gas fee</strong><br>$<span id="fee-gas">0.00</span></div>
           <div class="card"><strong>Cart + fees total</strong><br>$<span id="grand-total">0.00</span></div>
@@ -68,6 +71,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-control-geocoder/2.4.0/Control.Geocoder.js"></script>
-  <script src="checkout.js?v=1"></script>
+  <script src="checkout.js?v=2"></script>
 </body>
 </html>
