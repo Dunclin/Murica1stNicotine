@@ -52,7 +52,7 @@
       <p class="muted">Pay on delivery. Age verification required.</p>
     </section>
 
-    <!-- ZYN PRODUCTS (RESTORED) -->
+    <!-- ZYN PRODUCTS -->
     <section id="zyn" class="section">
       <h2 class="section-title">ZYN Nicotine Pouches</h2>
       <div class="grid">
@@ -98,7 +98,7 @@
       </div>
     </section>
 
-    <!-- DISPOSABLE VAPES (RESTORED) -->
+    <!-- DISPOSABLE VAPES -->
     <section id="disposables" class="section">
       <h2 class="section-title">Disposable Vapes</h2>
       <div class="grid">
@@ -196,7 +196,10 @@
       <h2 class="section-title">Delivery Details</h2>
       <div class="card">
         <label>Delivery address (type or search on the map)
-          <input type="text" id="addr" placeholder="Start typing: 123 Main St, City, State"/>
+          <div class="ac-wrap">
+            <input type="text" id="addr" autocomplete="off" placeholder="Start typing: 123 Main St, City, State"/>
+            <div id="addr-ac" class="ac-list hidden" role="listbox" aria-label="Address suggestions"></div>
+          </div>
         </label>
 
         <div id="map" class="map" aria-label="Delivery map"></div>

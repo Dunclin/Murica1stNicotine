@@ -107,6 +107,7 @@ maybeShowAgeGate();
 
 /* ---------------- Delivery + Leaflet Routing ---------------- */
 const addrInput = document.getElementById('addr');
+const acList = document.getElementById('addr-ac');
 const quoteBtn = document.getElementById('quote');
 const quoteStatus = document.getElementById('quote-status');
 const feeDeliveryEl = document.getElementById('fee-delivery');
@@ -119,6 +120,7 @@ let shopLatLng = null;
 let destLatLng = null;
 let lastQuote = null;
 
+/* --- helpers --- */
 function getCartTotal(){
   return getCart().reduce((sum, i) => sum + i.price * i.qty, 0);
 }
@@ -127,7 +129,9 @@ function updateGrandTotal(){
   const fees = (lastQuote?.fees?.delivery || 0) + (lastQuote?.fees?.gas || 0);
   grandTotalEl.textContent = (cartTotal + fees).toFixed(2);
 }
+function debounce(fn, ms=250){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
 
+/* --- Leaflet --- */
 function initLeafletDelivery(){
   const fallback = { lat: 39.7597, lng: -76.6760 };
   lMap = L.map('map').setView([fallback.lat, fallback.lng], 12);
@@ -153,25 +157,17 @@ function initLeafletDelivery(){
   const geocoderCtrl = L.Control.geocoder({ defaultMarkGeocode: false }).addTo(lMap);
   geocoderCtrl.on('markgeocode', (e) => {
     const c = e.geocode.center;
-    destLatLng = { lat: c.lat, lng: c.lng };
-    if (destMarker) destMarker.remove();
-    destMarker = L.marker([c.lat, c.lng], { title: 'Delivery' }).addTo(lMap);
-    addrInput.value = e.geocode.name;
-    drawRouteAndUpdate();
-    quoteStatus.textContent = 'Click "Get delivery quote" to compute fees.';
+    chooseAddress({ label: e.geocode.name, lat: c.lat, lon: c.lng });
   });
 
   lMap.on('click', (e) => {
-    destLatLng = { lat: e.latlng.lat, lng: e.latlng.lng };
-    if (destMarker) destMarker.remove();
-    destMarker = L.marker([destLatLng.lat, destLatLng.lng], { title: 'Delivery' }).addTo(lMap);
-    drawRouteAndUpdate();
-    quoteStatus.textContent = 'Click "Get delivery quote" to compute fees.';
+    chooseAddress({ label: `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`, lat: e.latlng.lat, lon: e.latlng.lng });
   });
 
   window.addEventListener('load', () => setTimeout(() => lMap.invalidateSize(), 100));
 }
 
+/* --- Routing --- */
 function drawRouteAndUpdate(){
   if (!shopLatLng || !destLatLng) return;
   if (lRouter) { lMap.removeControl(lRouter); lRouter = null; }
@@ -188,8 +184,117 @@ function drawRouteAndUpdate(){
   }).addTo(lMap);
 }
 
-document.addEventListener('DOMContentLoaded', initLeafletDelivery);
+/* --- Autocomplete using Nominatim --- */
+let acIndex = -1; // keyboard selection index
+const fetchSuggestions = debounce(async (q) => {
+  if (!q || q.length < 2) { acList.innerHTML = ''; acList.classList.add('hidden'); return; }
 
+  // Bias to US and near the shop (approx bounding box ±1°)
+  const bb = shopLatLng
+    ? `${shopLatLng.lng-1},${shopLatLng.lat-1},${shopLatLng.lng+1},${shopLatLng.lat+1}`
+    : '';
+  const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8&countrycodes=us${bb ? `&viewbox=${bb}&bounded=1` : ''}&q=${encodeURIComponent(q)}`;
+
+  try {
+    const res = await fetch(url, { headers: { 'User-Agent': 'murica1stnicotine/1.0 (contact: merchant@example.com)' } });
+    const data = await res.json();
+    renderSuggestions(data.map(d => ({
+      label: d.display_name,
+      lat: parseFloat(d.lat),
+      lon: parseFloat(d.lon)
+    })));
+  } catch (e) {
+    console.error('AC error', e);
+    acList.innerHTML = ''; acList.classList.add('hidden');
+  }
+}, 250);
+
+function renderSuggestions(items){
+  acList.innerHTML = '';
+  acIndex = -1;
+  if (!items || !items.length) { acList.classList.add('hidden'); return; }
+  items.forEach((it, idx) => {
+    const div = document.createElement('div');
+    div.className = 'ac-item';
+    div.setAttribute('role', 'option');
+    div.textContent = it.label;
+    div.addEventListener('mousedown', (e) => { // mousedown to fire before input blur
+      e.preventDefault();
+      chooseAddress(it);
+    });
+    acList.appendChild(div);
+  });
+  acList.classList.remove('hidden');
+}
+
+function moveSelection(delta){
+  const count = acList.children.length;
+  if (!count) return;
+  acIndex = (acIndex + delta + count) % count;
+  [...acList.children].forEach((el, i) => el.classList.toggle('active', i === acIndex));
+}
+function chooseHighlighted(){
+  if (acIndex < 0) return;
+  const el = acList.children[acIndex];
+  if (!el) return;
+  const label = el.textContent;
+  // We stored lat/lon only in renderSuggestions scope; instead, trigger a new search for exact pick:
+  // To avoid re-query, stash the coords on element dataset when rendering
+}
+/* Patch: store coords on each element */
+// We'll monkey patch renderSuggestions to add dataset coords by redefining it here.
+function renderSuggestions(items){
+  acList.innerHTML = '';
+  acIndex = -1;
+  if (!items || !items.length) { acList.classList.add('hidden'); return; }
+  items.forEach((it, idx) => {
+    const div = document.createElement('div');
+    div.className = 'ac-item';
+    div.setAttribute('role', 'option');
+    div.textContent = it.label;
+    div.dataset.lat = it.lat;
+    div.dataset.lon = it.lon;
+    div.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      chooseAddress({ label: it.label, lat: it.lat, lon: it.lon });
+    });
+    acList.appendChild(div);
+  });
+  acList.classList.remove('hidden');
+}
+function chooseHighlighted(){
+  if (acIndex < 0) return;
+  const el = acList.children[acIndex];
+  if (!el) return;
+  chooseAddress({ label: el.textContent, lat: parseFloat(el.dataset.lat), lon: parseFloat(el.dataset.lon) });
+}
+
+function chooseAddress({ label, lat, lon }){
+  addrInput.value = label;
+  if (destMarker) destMarker.remove();
+  destLatLng = { lat, lng: lon };
+  destMarker = L.marker([lat, lon], { title: 'Delivery' }).addTo(lMap);
+  drawRouteAndUpdate();
+  acList.innerHTML = ''; acList.classList.add('hidden');
+  quoteStatus.textContent = 'Click "Get delivery quote" to compute fees.';
+}
+
+/* input + keyboard handling */
+addrInput.addEventListener('input', (e) => fetchSuggestions(e.target.value));
+addrInput.addEventListener('keydown', (e) => {
+  if (acList.classList.contains('hidden')) return;
+  if (e.key === 'ArrowDown') { e.preventDefault(); moveSelection(1); }
+  if (e.key === 'ArrowUp')   { e.preventDefault(); moveSelection(-1); }
+  if (e.key === 'Enter')     { e.preventDefault(); chooseHighlighted(); }
+  if (e.key === 'Escape')    { acList.classList.add('hidden'); }
+});
+document.addEventListener('click', (e) => {
+  if (!acList.contains(e.target) && e.target !== addrInput) {
+    acList.classList.add('hidden');
+  }
+});
+
+/* Quote + checkout */
 async function requestQuote(){
   const address = (addrInput?.value || '').trim();
   if (!address && !destLatLng) return alert('Enter or pick a delivery address.');
@@ -239,3 +344,5 @@ checkoutBtn?.addEventListener('click', async () => {
     alert('Could not place order. Please try again.');
   }
 });
+
+document.addEventListener('DOMContentLoaded', initLeafletDelivery);
