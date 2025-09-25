@@ -3,7 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const https = require('https');
 const cors = require('cors');
-const { Expo } = require('expo-server-sdk');
+const fetchFn = global.fetch || ((...a) => import('node-fetch').then(({default: f}) => f(...a)));
 
 const app = express();
 app.use(bodyParser.json());
@@ -15,36 +15,29 @@ const {
   DELIVERY_BASE_FEE = '4.00',
   DELIVERY_BASE_RADIUS_KM = '5',
   DELIVERY_PER_KM_BEYOND = '0.75',
-  GAS_FEE_PER_KM = '0.10'
+  GAS_FEE_PER_KM = '0.10',
+  DISCORD_WEBHOOK_URL = ''
 } = process.env;
 
-// Expo push setup
-let expo = new Expo();
-const deviceTokens = new Set();
-
-app.post('/api/register-device', (req, res) => {
-  const token = req.body?.token;
-  if (!token || !Expo.isExpoPushToken(token)) {
-    return res.status(400).json({ error: 'Invalid Expo push token' });
-  }
-  deviceTokens.add(token);
-  console.log('[DEVICE REGISTERED]', token);
-  res.json({ ok: true });
-});
-
-async function notifyDrivers(title, body, data){
-  const messages = [];
-  for (const token of deviceTokens) {
-    messages.push({ to: token, sound: 'default', title, body, data });
-  }
-  const chunks = expo.chunkPushNotifications(messages);
-  for (const chunk of chunks) {
-    try { await expo.sendPushNotificationsAsync(chunk); }
-    catch (e) { console.error('Push chunk error', e); }
+async function notifyDiscord({ orderId, total, address, distance_km }) {
+  if (!DISCORD_WEBHOOK_URL) return;
+  const content =
+    `🧾 **New Delivery Order**\n` +
+    `ID: ${orderId}\n` +
+    `Total: $${Number(total).toFixed(2)}\n` +
+    `Distance: ${Number(distance_km).toFixed(2)} km\n` +
+    `Address: ${address}`;
+  try {
+    await fetchFn(DISCORD_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content })
+    });
+  } catch (e) {
+    console.error('[Discord webhook error]', e);
   }
 }
 
-// Helpers
 function haversineKm(lat1, lon1, lat2, lon2){
   const toRad = d => d * Math.PI / 180;
   const R = 6371;
@@ -53,7 +46,6 @@ function haversineKm(lat1, lon1, lat2, lon2){
   const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
-
 function geocodeNominatim(address){
   return new Promise((resolve, reject) => {
     if (!address) return reject(new Error('No address'));
@@ -73,7 +65,6 @@ function geocodeNominatim(address){
     req.on('error', reject);
   });
 }
-
 function calcFees(distanceKm){
   const baseFee = parseFloat(DELIVERY_BASE_FEE);
   const baseRadius = parseFloat(DELIVERY_BASE_RADIUS_KM);
@@ -85,10 +76,8 @@ function calcFees(distanceKm){
   return { delivery: round(delivery), gas: round(gas) };
 }
 
-// Health
 app.get('/health', (_req,res)=>res.send('ok'));
 
-// Quote
 app.post('/api/quote', async (req, res) => {
   try {
     const { address, lat, lng } = req.body || {};
@@ -111,7 +100,6 @@ app.post('/api/quote', async (req, res) => {
   }
 });
 
-// Order
 app.post('/api/order', async (req, res) => {
   try {
     const { address, lat, lng, cart } = req.body || {};
@@ -141,10 +129,7 @@ app.post('/api/order', async (req, res) => {
     const orderId = 'ORD-' + Date.now().toString(36).toUpperCase();
     console.log('[NEW ORDER]', { orderId, address, coords: dest, cart, fees, total });
 
-    // push
-    notifyDrivers('New Delivery Order', `Total $${total.toFixed(2)}`, {
-      orderId, total, address, distance_km, when: Date.now()
-    }).catch(console.error);
+    await notifyDiscord({ orderId, total, address, distance_km });
 
     return res.json({ orderId, total, fees, distance_km });
   } catch (e) {

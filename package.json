@@ -1,17 +1,17 @@
 {
-  "name": "murica1stnicotine-courier",
+  "name": "murica1stnicotine-server",
   "version": "1.0.0",
   "private": true,
-  "main": "index.js",
+  "main": "server.js",
+  "type": "commonjs",
   "scripts": {
-    "start": "expo start -c"
+    "start": "node server.js"
   },
   "dependencies": {
-    "expo": "^51.0.0",
-    "expo-notifications": "~0.28.5",
-    "expo-device": "~6.0.2",
-    "expo-constants": "~16.0.2",
-    "react": "18.2.0",
-    "react-native": "0.74.3"
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "node-fetch": "^3.3.2"
   }
 }
